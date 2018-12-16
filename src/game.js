@@ -87,7 +87,6 @@ export class Tetris {
 
   movePiece(move) {
     // should be using type script you dummy.
-    move = [0, 1];
     this.activePiece.move(move);
     //this.checkCollisions();
     // this.checkLineMade();
@@ -164,7 +163,8 @@ export class Tetris {
     // we need to count how many are collapsed for points!
     let removed = 0;
     for (let y = 0; y < this.state.cells.length; y++) {
-      if (this.state.cells[y].every(x => Boolean)) {
+      if (this.state.cells[y].every(Boolean)) {
+        console.log('removing lines!~');
         // remove line
         this.state.cells.splice(y, 1);
         this.state.cells.unshift(Array(GRID_WIDTH).fill(null));
@@ -177,6 +177,19 @@ export class Tetris {
   }
 }
 
+const moveMap = {
+  'ArrowLeft': [-1, 0],
+  'ArrowRight': [1, 0],
+  'ArrowDown': [0, 1],
+  'ArrowUp': [0, 0]
+}
+const debounce = (fn, time) => {
+  return (...args) => {
+
+  console.log('tryin gto debounce', time);
+  fn(...args);
+  }
+}
 export class Game {
   constructor({ root, document }) {
     this.root = root;
@@ -189,6 +202,34 @@ export class Game {
     this.countdown = this.getCountdown();
     this.gameOver = false;
     this.paused = false;
+    this.handleInput = debounce(
+      this.handleInput.bind(this), this.frameRate);
+  }
+
+  handleInput(e) {
+    switch(e.key) {
+      case 'ArrowLeft':
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case 'ArrowUp':
+        this.gameEngine.movePiece(moveMap[e.key]);
+        break;
+      case 'z':
+        // better to do generic handling.
+        this.gameEngine.rotatePiece('left');
+        break;
+      case 'x':
+        this.gameEngine.rotatePiece('right');
+        break;
+      case 'Escape':
+        this.gameEngine.pauseGame();
+        break;
+      case 'Enter':
+        this.gameEngine.unpauseGame();
+        break;
+      default:
+        console.log(`Unhandled input:`, e);
+    }
   }
 
   getCountdown() {
@@ -234,7 +275,7 @@ export class Game {
       this.gameEngine.commit();
       this.gameEngine.collapse();
     } else {
-      this.gameEngine.movePiece();
+      this.gameEngine.movePiece(moveMap['ArrowDown']);
     }
     // countdown = countdown - delta ?
     // countdown <= 0 ?
