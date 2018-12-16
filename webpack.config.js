@@ -1,3 +1,4 @@
 module.exports = {
-    entry: { tetris: './src/index.js' }
-  };
+  mode: 'development',
+  entry: { tetris: './src/index.js' }
+};

@@ -5,13 +5,16 @@
 import { Game } from './game';
 
 let shouldRender = true;
-let game = new Game({});
+let game = new Game({
+  root: document.querySelector('#root'),
+  document
+});
 const setShouldRender = (val) => shouldRender = val;
 
 const renderLoop = () => {
   if (shouldRender) {
     console.log('animating!');
-    game.renderFrame();
+    game.tick(Date.now());
   }
   window.requestAnimationFrame(renderLoop);
 }
