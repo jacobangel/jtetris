@@ -22,10 +22,12 @@ const renderLoop = () => {
 window.addEventListener('keydown', (e) => {
   console.log(e.key, e.keyCode, e.code);
   if (e.key === 'Escape') {
-      setShouldRender(false);
+    game.pauseGame();
+     // setShouldRender(false);
   }
   if (e.key === 'Enter') {
-      setShouldRender(true);
+    // setShouldRender(true);
+    game.unpauseGame();
   }
 });
 

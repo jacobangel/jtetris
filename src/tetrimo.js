@@ -7,7 +7,7 @@ export class Tetrimo {
   }
 
   move(dir) {
-    this.coord = this.coord.transform(dir);
+    this.center = Coord.transform(this.center, dir);
   }
 
   getCoords() {
