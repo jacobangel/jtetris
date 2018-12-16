@@ -1,57 +1,17 @@
 export const GRID_WIDTH = 10;
 export const GRID_HEIGHT = 20;
 export const CELL_SIZE = 30; //px
+export const moveMap = {
+  'ArrowLeft': [-1, 0],
+  'ArrowRight': [1, 0],
+  'ArrowDown': [0, 1],
+  'ArrowUp': [0, 0]
+}
 
 import { getRandomPiece } from './tetrimo';
 import { Coord } from './coord';
-
-const renderBoard = (height, width) => { }
-
-const fillScreen = (ctx, color) => {
-  ctx.fillStyle = color;
-  ctx.fillRect(0, 0, CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT);
-}
-
-const drawTextScreen = (ctx, message) => {
-  fillScreen(ctx, 'gray');
-  ctx.fillStyle ='black';
-  ctx.font = '48px \'Helvetica Neue\', sans-serif';
-  const textCenter = ctx.measureText(message).width / 2;
-  const xCenter = CELL_SIZE * GRID_WIDTH / 2;
-  ctx.fillText(message,  xCenter - textCenter, CELL_SIZE * GRID_HEIGHT / 2);
-}
-
-const drawPaused = (ctx) => {
-  return drawTextScreen(ctx, 'PAUSED');
-}
-
-const drawGameOver = ctx => {
-  return drawTextScreen(ctx, 'GAME OVER');
-}
-
-const drawBlock = (ctx, coord) => {
-  ctx.fillStyle = 'gray';
-  ctx.fillRect(coord.x * CELL_SIZE, coord.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-}
-
-const drawGrid = (ctx) => {
-  fillScreen(ctx, 'white');
-  ctx.fillStyle = 'black'; // line color
-  ctx.lineWidth = 1.0;
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  for (let y = 0; y <= GRID_HEIGHT; y++) {
-    ctx.moveTo(0, y * CELL_SIZE);
-    ctx.lineTo(GRID_WIDTH * CELL_SIZE, y * CELL_SIZE);
-  } 
-  ctx.moveTo(0, 0);
-  for (let x = 0; x <= GRID_WIDTH; x++) {
-    ctx.moveTo(x * CELL_SIZE, 0)
-    ctx.lineTo(x * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
-  }
-  ctx.stroke();             
-
-};
+import { drawPaused, drawBlock, drawGrid } from './canvasUtils';
+import { debounce } from './debounce';
 
 export class Tetris {
   constructor() {
@@ -85,9 +45,52 @@ export class Tetris {
     this.activePiecePostion = piecePostion;
   }
 
+  // left or right
+  // it would be nice if the pieces could help us more. maybe i'mve doing
+  // stuff int he wrong place.
+  canRotate(dir) {
+    if (!this.activePiece) return false;
+    let activeCopy = this.activePiece.getCopy(); 
+    activeCopy = activeCopy.rotate(dir);
+    console.log(activeCopy);
+    return !activeCopy.getCoords().some((coord) => {
+      console.log(coord);
+      return this.hasCollision(coord);
+    });
+  }
+
+  rotatePiece(dir) {
+    if (!this.activePiece) return;
+    if (this.canRotate(dir)) {
+      console.log('can rorate!!');
+      this.activePiece.rotate(dir);
+    } else console.log('cannot ratate');
+  }
+
+  hasCollision(cord) {
+    if (cord.x < 0 || cord.x > GRID_WIDTH - 1) {
+      return true;
+    }
+    if (cord.y > GRID_HEIGHT -1 || cord.y < 0) {
+      return true;
+    }
+
+    return Boolean(this.state.cells[cord.y][cord.x]);
+  }
+
+  canMove(move) {
+    if (!this.activePiece) return false;
+    const proposedMove = this.activePiece.getCoords().map(point => {
+      return Coord.transform(point, move);
+    })
+    return !proposedMove.some(this.hasCollision, this);
+  }
+
   movePiece(move) {
     // should be using type script you dummy.
-    this.activePiece.move(move);
+    if (this.canMove(move)) {
+      this.activePiece.move(move);
+    }
     //this.checkCollisions();
     // this.checkLineMade();
   }
@@ -106,7 +109,6 @@ export class Tetris {
       for (let j = 0; j < this.state.cells[i].length; j++) {
         let cell = this.state.cells[i][j];
         if (cell) {
-          console.log(`drawing cell! ${i} ${j}`);
           drawBlock(ctx, new Coord(j, i));
         }
       }
@@ -127,24 +129,7 @@ export class Tetris {
     const coords = this.activePiece.getCoords();
     const cells = (this.state.cells);
     console.log('cehecking can fall', coords.length);
-    return coords.every((coord) => {
-      const [x, y] = coord.toArray();
-      console.log(`${x}, ${y}`);
-      if (y + 1 > GRID_HEIGHT - 1) {
-        return false;
-      }
-      const nextRow = cells[y + 1];
-      if (!nextRow) {
-        console.log('no next row');
-        return false;
-      }
-      const nextSlot = cells[y+1][x];
-      if (nextSlot) {
-        console.log('next slow occupied');
-        return false;
-      }
-      return true;
-    })
+    return this.canMove(moveMap['ArrowDown']);
   }
 
   commit () {
@@ -177,33 +162,21 @@ export class Tetris {
   }
 }
 
-const moveMap = {
-  'ArrowLeft': [-1, 0],
-  'ArrowRight': [1, 0],
-  'ArrowDown': [0, 1],
-  'ArrowUp': [0, 0]
-}
-const debounce = (fn, time) => {
-  return (...args) => {
-
-  console.log('tryin gto debounce', time);
-  fn(...args);
-  }
-}
 export class Game {
   constructor({ root, document }) {
     this.root = root;
     this.document = document;
     this.attachElements();
-    this.gameEngine = new Tetris();
-    this.gameEngine.start();
     this.frameRate = 50 //20hertz in milliseconds
     this.level = 1;
     this.countdown = this.getCountdown();
     this.gameOver = false;
     this.paused = false;
-    this.handleInput = debounce(
-      this.handleInput.bind(this), this.frameRate);
+    this.handleInput = this.handleInput.bind(this);
+    this.handleInput = debounce(this.handleInput, this.frameRate);
+
+    this.gameEngine = new Tetris();
+    this.gameEngine.start();
   }
 
   handleInput(e) {
@@ -235,6 +208,7 @@ export class Game {
   getCountdown() {
     return this.frameRate * (11 - this.level);
   }
+
   tick(time) {
     // is Game Over?
     if (this.isGameOver()) {
@@ -260,7 +234,7 @@ export class Game {
     }
 
     if (this.countdown <= 0) {
-      console.log('showing tickt!');
+      console.log('showing tick!');
     }
     this.countdown = this.getCountdown();
     if (!this.gameEngine.hasActivePiece()) {
