@@ -1,6 +1,12 @@
 export const GRID_WIDTH = 10;
 export const GRID_HEIGHT = 20;
 export const CELL_SIZE = 30; //px
+export const DASHBOARD_HEIGHT = CELL_SIZE * 3;
+export const SIDEBAR_WIDTH = CELL_SIZE * 3;
+export const BOARD_HEIGHT = GRID_HEIGHT * CELL_SIZE;
+export const BOARD_WIDTH = GRID_WIDTH * CELL_SIZE;
+export const FULL_HEIGHT = BOARD_HEIGHT + DASHBOARD_HEIGHT;
+export const FULL_WIDTH = BOARD_WIDTH + SIDEBAR_WIDTH;
 export const moveMap = {
   'ArrowLeft': [-1, 0],
   'ArrowRight': [1, 0],
@@ -8,15 +14,21 @@ export const moveMap = {
   'ArrowUp': [0, 0]
 }
 
+import { Logger } from './logger';
+
 import { getRandomPiece } from './tetrimo';
 import { Coord } from './coord';
-import { drawPaused, drawBlock, drawGrid } from './canvasUtils';
-import { debounce } from './debounce';
+import { drawPaused, drawBlock, drawGrid, fillFullScreen } from './canvasUtils';
+// import { debounce } from './debounce';
 
 export class Tetris {
   constructor() {
+    this.level = 1;
+    this.score = 0;
+    this.linesCleared = 0;
+    // @todo add a count of "seen" pieces
     const cells = [];
-
+    this.logger = new Logger()
     for (let i = 0; i < GRID_HEIGHT; i++) {
       cells.push([]);
       for (let j = 0; j < GRID_WIDTH; j++) {
@@ -24,11 +36,7 @@ export class Tetris {
       }
     } 
 
-    const pieces = [];
-
-    this.state = {
-      cells,
-    }
+    this.cells = cells;
   }
 
   start() {
@@ -52,9 +60,9 @@ export class Tetris {
     if (!this.activePiece) return false;
     let activeCopy = this.activePiece.getCopy(); 
     activeCopy = activeCopy.rotate(dir);
-    console.log(activeCopy);
+    this.logger.info(activeCopy);
     return !activeCopy.getCoords().some((coord) => {
-      console.log(coord);
+      this.logger.info(coord);
       return this.hasCollision(coord);
     });
   }
@@ -62,9 +70,9 @@ export class Tetris {
   rotatePiece(dir) {
     if (!this.activePiece) return;
     if (this.canRotate(dir)) {
-      console.log('can rorate!!');
+      this.logger.info('can rorate!!');
       this.activePiece.rotate(dir);
-    } else console.log('cannot ratate');
+    } else this.logger.info('cannot ratate');
   }
 
   hasCollision(cord) {
@@ -75,14 +83,14 @@ export class Tetris {
       return true;
     }
 
-    return Boolean(this.state.cells[cord.y][cord.x]);
+    return Boolean(this.cells[cord.y][cord.x]);
   }
 
   canMove(move) {
     if (!this.activePiece) return false;
     const proposedMove = this.activePiece.getCoords().map(point => {
       return Coord.transform(point, move);
-    })
+    });
     return !proposedMove.some(this.hasCollision, this);
   }
 
@@ -105,9 +113,9 @@ export class Tetris {
   }
 
   drawFallen(ctx) {
-    for (let i = 0; i < this.state.cells.length; i++) {
-      for (let j = 0; j < this.state.cells[i].length; j++) {
-        let cell = this.state.cells[i][j];
+    for (let i = 0; i < this.cells.length; i++) {
+      for (let j = 0; j < this.cells[i].length; j++) {
+        let cell = this.cells[i][j];
         if (cell) {
           drawBlock(ctx, new Coord(j, i));
         }
@@ -127,8 +135,8 @@ export class Tetris {
 
   canFall() {
     const coords = this.activePiece.getCoords();
-    const cells = (this.state.cells);
-    console.log('cehecking can fall', coords.length);
+    const cells = (this.cells);
+    this.logger.info('cehecking can fall', coords.length);
     return this.canMove(moveMap['ArrowDown']);
   }
 
@@ -139,23 +147,38 @@ export class Tetris {
 
     const coords = this.activePiece.getCoords();
     for (let coord of coords) {
-      this.state.cells[coord.y][coord.x] = true;
+      this.cells[coord.y][coord.x] = true;
     }
     this.activePiece = null;
+  }
+
+  scoreLines(removed) {
+    return this.level * removed * removed;
   }
 
   collapse() {
     // we need to count how many are collapsed for points!
     let removed = 0;
-    for (let y = 0; y < this.state.cells.length; y++) {
-      if (this.state.cells[y].every(Boolean)) {
-        console.log('removing lines!~');
+    for (let y = 0; y < this.cells.length; y++) {
+      if (this.cells[y].every(Boolean)) {
+        this.logger.info('removing lines!~');
         // remove line
-        this.state.cells.splice(y, 1);
-        this.state.cells.unshift(Array(GRID_WIDTH).fill(null));
+        this.cells.splice(y, 1);
+        this.cells.unshift(Array(GRID_WIDTH).fill(null));
         removed++;
       }
     } 
+    // this assumes that all scores are contiguous
+    this.score += this.scoreLines(removed);
+    this.linesCleared += removed;
+  }
+
+  drawDash(ctx) {
+    ctx.fillStyle = 'black';
+    ctx.font = '12px \'Helvetica Neue\', sans-serif';
+    ctx.fillText(`Level: ${this.level}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE);
+    ctx.fillText(`Score: ${this.score}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 2);
+    ctx.fillText(`Cleared: ${this.linesCleared}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3);
   }
 
   checkBoard() {
@@ -164,6 +187,7 @@ export class Tetris {
 
 export class Game {
   constructor({ root, document }) {
+    this.logger = new Logger();
     this.root = root;
     this.document = document;
     this.attachElements();
@@ -173,8 +197,7 @@ export class Game {
     this.gameOver = false;
     this.paused = false;
     this.handleInput = this.handleInput.bind(this);
-    this.handleInput = debounce(this.handleInput, this.frameRate);
-
+    // this.handleInput = debounce(this.handleInput, this.frameRate / 4);
     this.gameEngine = new Tetris();
     this.gameEngine.start();
   }
@@ -201,7 +224,7 @@ export class Game {
         this.gameEngine.unpauseGame();
         break;
       default:
-        console.log(`Unhandled input:`, e);
+        this.logger.info(`Unhandled input:`, e);
     }
   }
 
@@ -212,13 +235,13 @@ export class Game {
   tick(time) {
     // is Game Over?
     if (this.isGameOver()) {
-      console.log('game over!');
+      this.logger.info('game over!');
       return;
     }
 
     // is Game Paused?
     if (this.isPaused()) {
-      console.log('paused');
+      this.logger.info('paused');
       this.renderFrame();
       return;
     }
@@ -227,14 +250,14 @@ export class Game {
     const delta = time - this.lastTick; 
     this.lastTick = time;
     this.countdown = this.countdown - delta;
-    // console.log(`cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`)
+    // this.logger.info(`cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`)
     if (this.countdown > 0) {
-      // console.log('not yet');
+      // this.logger.info('not yet');
       return;
     }
 
     if (this.countdown <= 0) {
-      console.log('showing tick!');
+      this.logger.info('showing tick!');
     }
     this.countdown = this.getCountdown();
     if (!this.gameEngine.hasActivePiece()) {
@@ -271,18 +294,23 @@ export class Game {
     // bewteen coutndown you can attempt to move
     this.renderFrame();
   }
+
   isPaused() { return this.paused; }
+
   isGameOver() { return this.gameOver; }
+
   pauseGame() {
     this.paused = true;
   }
+
   unpauseGame() {
     this.paused = false;
   }
+
   attachElements() {
     const canvas = document.createElement('canvas');
-    canvas.height = GRID_HEIGHT * CELL_SIZE;
-    canvas.width = GRID_WIDTH * CELL_SIZE;
+    canvas.height = GRID_HEIGHT * CELL_SIZE + DASHBOARD_HEIGHT;
+    canvas.width = GRID_WIDTH * CELL_SIZE + SIDEBAR_WIDTH;
     this.ctx = canvas.getContext('2d');
     this.root.appendChild(canvas);
   }
@@ -302,9 +330,11 @@ export class Game {
     }
 
     this.lastFrame = time;
-    console.log('Game rendering'); 
+    this.logger.info('Game rendering'); 
+    fillFullScreen(this.ctx, 'white');
     drawGrid(this.ctx);
     this.gameEngine.drawPieces(this.ctx);
     this.gameEngine.drawFallen(this.ctx);
+    this.gameEngine.drawDash(this.ctx);
   }
 }

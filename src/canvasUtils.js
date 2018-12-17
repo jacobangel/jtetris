@@ -1,9 +1,16 @@
-import { CELL_SIZE, GRID_WIDTH, GRID_HEIGHT } from './game';
-const fillScreen = (ctx, color) => {
+import { CELL_SIZE, GRID_WIDTH, GRID_HEIGHT, FULL_HEIGHT, FULL_WIDTH } from './game';
+
+export const fillFullScreen = (ctx, color) => {
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, FULL_WIDTH, FULL_HEIGHT);
+};
+
+export const fillScreen = (ctx, color) => {
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT);
 };
-const drawTextScreen = (ctx, message) => {
+
+export const drawTextScreen = (ctx, message) => {
   fillScreen(ctx, 'gray');
   ctx.fillStyle = 'black';
   ctx.font = '48px \'Helvetica Neue\', sans-serif';
@@ -11,18 +18,21 @@ const drawTextScreen = (ctx, message) => {
   const xCenter = CELL_SIZE * GRID_WIDTH / 2;
   ctx.fillText(message, xCenter - textCenter, CELL_SIZE * GRID_HEIGHT / 2);
 };
+
 export const drawPaused = (ctx) => {
   return drawTextScreen(ctx, 'PAUSED');
 };
-const drawGameOver = ctx => {
+
+export const drawGameOver = ctx => {
   return drawTextScreen(ctx, 'GAME OVER');
 };
+
 export const drawBlock = (ctx, coord) => {
   ctx.fillStyle = 'gray';
   ctx.fillRect(coord.x * CELL_SIZE, coord.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 };
+
 export const drawGrid = (ctx) => {
-  fillScreen(ctx, 'white');
   ctx.fillStyle = 'black'; // line color
   ctx.lineWidth = 1.0;
   ctx.beginPath();
