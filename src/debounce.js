@@ -6,7 +6,7 @@ export const debounce = (fn, wait, immediate) => {
       if (!immediate) {
         fn(...args);
       }
-    }
+    };
     var callNow = immediate && !timeout;
     timeout = setTimeout(later, wait);
     if (callNow) {

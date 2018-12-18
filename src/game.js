@@ -8,11 +8,11 @@ export const BOARD_WIDTH = GRID_WIDTH * CELL_SIZE;
 export const FULL_HEIGHT = BOARD_HEIGHT + DASHBOARD_HEIGHT;
 export const FULL_WIDTH = BOARD_WIDTH + SIDEBAR_WIDTH;
 export const moveMap = {
-  'ArrowLeft': [-1, 0],
-  'ArrowRight': [1, 0],
-  'ArrowDown': [0, 1],
-  'ArrowUp': [0, 0]
-}
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowDown: [0, 1],
+  ArrowUp: [0, 0],
+};
 
 import { Logger } from './logger';
 
@@ -28,26 +28,25 @@ export class Tetris {
     this.linesCleared = 0;
     // @todo add a count of "seen" pieces
     const cells = [];
-    this.logger = new Logger()
+    this.logger = new Logger();
     for (let i = 0; i < GRID_HEIGHT; i++) {
       cells.push([]);
       for (let j = 0; j < GRID_WIDTH; j++) {
         cells[i].push(null);
       }
-    } 
+    }
 
     this.cells = cells;
   }
 
-  start() {
-  }
+  start() {}
 
   canSpawnPiece() {
     return true;
   }
 
   addPiece() {
-    const piecePostion = [ 5 /**replace with math on width */, 0];
+    const piecePostion = [5 /**replace with math on width */, 0];
     const newPiece = getRandomPiece(piecePostion);
     this.activePiece = newPiece;
     this.activePiecePostion = piecePostion;
@@ -58,10 +57,10 @@ export class Tetris {
   // stuff int he wrong place.
   canRotate(dir) {
     if (!this.activePiece) return false;
-    let activeCopy = this.activePiece.getCopy(); 
+    let activeCopy = this.activePiece.getCopy();
     activeCopy = activeCopy.rotate(dir);
     this.logger.info(activeCopy);
-    return !activeCopy.getCoords().some((coord) => {
+    return !activeCopy.getCoords().some(coord => {
       this.logger.info(coord);
       return this.hasCollision(coord);
     });
@@ -79,7 +78,7 @@ export class Tetris {
     if (cord.x < 0 || cord.x > GRID_WIDTH - 1) {
       return true;
     }
-    if (cord.y > GRID_HEIGHT -1 || cord.y < 0) {
+    if (cord.y > GRID_HEIGHT - 1 || cord.y < 0) {
       return true;
     }
 
@@ -135,19 +134,22 @@ export class Tetris {
 
   canFall() {
     const coords = this.activePiece.getCoords();
-    const cells = (this.cells);
+    const cells = this.cells;
     this.logger.info('cehecking can fall', coords.length);
     return this.canMove(moveMap['ArrowDown']);
   }
 
-  commit () {
+  commit() {
     if (!this.activePiece) {
-      throw new Error('Cannot commit a piece that doesn\'t exist');
-    } 
+      throw new Error("Cannot commit a piece that doesn't exist");
+    }
 
     const coords = this.activePiece.getCoords();
     for (let coord of coords) {
-      this.cells[coord.y][coord.x] = new Block(new Coord(coord.x, coord.y), this.activePiece.color);
+      this.cells[coord.y][coord.x] = new Block(
+        new Coord(coord.x, coord.y),
+        this.activePiece.color
+      );
     }
     this.activePiece = null;
   }
@@ -167,7 +169,7 @@ export class Tetris {
         this.cells.unshift(Array(GRID_WIDTH).fill(null));
         removed++;
       }
-    } 
+    }
     // this assumes that all scores are contiguous
     this.score += this.scoreLines(removed);
     this.linesCleared += removed;
@@ -175,14 +177,25 @@ export class Tetris {
 
   drawDash(ctx) {
     ctx.fillStyle = 'black';
-    ctx.font = '12px \'Helvetica Neue\', sans-serif';
-    ctx.fillText(`Level: ${this.level}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE);
-    ctx.fillText(`Score: ${this.score}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 2);
-    ctx.fillText(`Cleared: ${this.linesCleared}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3);
+    ctx.font = "12px 'Helvetica Neue', sans-serif";
+    ctx.fillText(
+      `Level: ${this.level}`,
+      CELL_SIZE,
+      CELL_SIZE * GRID_HEIGHT + CELL_SIZE
+    );
+    ctx.fillText(
+      `Score: ${this.score}`,
+      CELL_SIZE,
+      CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 2
+    );
+    ctx.fillText(
+      `Cleared: ${this.linesCleared}`,
+      CELL_SIZE,
+      CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3
+    );
   }
 
-  checkBoard() {
-  }
+  checkBoard() {}
 }
 
 export class Game {
@@ -191,7 +204,7 @@ export class Game {
     this.root = root;
     this.document = document;
     this.attachElements();
-    this.frameRate = 50 //20hertz in milliseconds
+    this.frameRate = 50; //20hertz in milliseconds
     this.level = 1;
     this.countdown = this.getCountdown();
     this.gameOver = false;
@@ -203,7 +216,7 @@ export class Game {
   }
 
   handleInput(e) {
-    switch(e.key) {
+    switch (e.key) {
       case 'ArrowLeft':
       case 'ArrowRight':
       case 'ArrowDown':
@@ -247,7 +260,7 @@ export class Game {
     }
 
     if (this.lastTick === undefined) this.lastTick = time;
-    const delta = time - this.lastTick; 
+    const delta = time - this.lastTick;
     this.lastTick = time;
     this.countdown = this.countdown - delta;
     // this.logger.info(`cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`)
@@ -276,28 +289,32 @@ export class Game {
     }
     // countdown = countdown - delta ?
     // countdown <= 0 ?
-    // 
+    //
     // set countdown = 0.05 * (11 - level);
     // active pice?
     //   no
-    //   can spawn 
+    //   can spawn
     //      yes spawn piece
     //      no   game over
     //   yes
-    //      can fall? 
-    //      no 
+    //      can fall?
+    //      no
     //        commit piece
-    //        collapse board 
-    //      yes 
+    //        collapse board
+    //      yes
     //        move piece down
 
     // bewteen coutndown you can attempt to move
     this.renderFrame();
   }
 
-  isPaused() { return this.paused; }
+  isPaused() {
+    return this.paused;
+  }
 
-  isGameOver() { return this.gameOver; }
+  isGameOver() {
+    return this.gameOver;
+  }
 
   pauseGame() {
     this.paused = true;
@@ -315,9 +332,7 @@ export class Game {
     this.root.appendChild(canvas);
   }
 
-  renderBoard(height, width) {
-    
-  }
+  renderBoard(height, width) {}
 
   renderFrame(time) {
     if (this.isGameOver()) {
@@ -330,7 +345,7 @@ export class Game {
     }
 
     this.lastFrame = time;
-    this.logger.info('Game rendering'); 
+    this.logger.info('Game rendering');
     fillFullScreen(this.ctx, 'white');
     drawGrid(this.ctx);
     this.gameEngine.drawPieces(this.ctx);

@@ -1,4 +1,4 @@
-import { Coord } from "./coord";
+import { Coord } from './coord';
 
 export class Tetrimo {
   constructor(center, color = 'grey') {
@@ -8,7 +8,7 @@ export class Tetrimo {
     this.center = center;
     this._coords = [[[0, 0]]];
     this.index = 0;
-    this.color = color; 
+    this.color = color;
   }
 
   getCopy() {
@@ -34,7 +34,7 @@ export class Tetrimo {
   }
 
   rotate(dir) {
-    if (dir === "left") {
+    if (dir === 'left') {
       this.setIndex(-1);
     } else {
       this.setIndex(1);
@@ -59,10 +59,10 @@ export class OPiece extends Tetrimo {
 export class IPiece extends Tetrimo {
   constructor(props, color = 'cyan') {
     super(props, color);
-    this.color = color; 
+    this.color = color;
     this._coords = [
       [[0, 0], [-1, 0], [1, 0], [-2, 0]],
-      [[0, -1], [0, 0], [0, 1], [0, 2]]
+      [[0, -1], [0, 0], [0, 1], [0, 2]],
     ];
   }
 }
@@ -72,7 +72,7 @@ export class SPiece extends Tetrimo {
     super(props, color);
     this._coords = [
       [[0, 0], [1, 0], [0, 1], [-1, 1]],
-      [[0, 0], [0, -1], [1, 1], [1, 0]]
+      [[0, 0], [0, -1], [1, 1], [1, 0]],
     ];
   }
 }
@@ -82,7 +82,7 @@ export class ZPiece extends Tetrimo {
     super(props, color);
     this._coords = [
       [[-1, 0], [0, 0], [0, 1], [1, 1]],
-      [[0, 0], [1, 0], [1, -1], [0, 1]]
+      [[0, 0], [1, 0], [1, -1], [0, 1]],
     ];
   }
 }
@@ -95,7 +95,7 @@ export class LPiece extends Tetrimo {
       [[-1, 1], [-1, 0], [0, 0], [1, 0]],
       [[0, -1], [0, 0], [0, 1], [-1, -1]],
       [[-1, 0], [0, 0], [1, 0], [1, -1]],
-      [[0, -1], [0, 0], [0, 1], [-1, 1]]
+      [[0, -1], [0, 0], [0, 1], [-1, 1]],
     ];
   }
 }
@@ -119,7 +119,7 @@ export class TPiece extends Tetrimo {
       [[0, 0], [-1, 0], [1, 0], [0, 1]],
       [[0, -1], [0, 0], [0, 1], [1, 0]],
       [[0, 0], [-1, 0], [1, 0], [0, -1]],
-      [[0, -1], [0, 0], [0, 1], [-1, 0]]
+      [[0, -1], [0, 0], [0, 1], [-1, 0]],
     ];
   }
 }
@@ -138,7 +138,7 @@ export const TETRIMO_TYPES = {
   Z: ZPiece,
   L: LPiece,
   J: JPiece,
-  T: TPiece
+  T: TPiece,
 };
 const pieceList = [OPiece, IPiece, SPiece, ZPiece, LPiece, JPiece, TPiece];
 

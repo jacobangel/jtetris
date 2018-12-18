@@ -1,4 +1,10 @@
-import { CELL_SIZE, GRID_WIDTH, GRID_HEIGHT, FULL_HEIGHT, FULL_WIDTH } from './game';
+import {
+  CELL_SIZE,
+  GRID_WIDTH,
+  GRID_HEIGHT,
+  FULL_HEIGHT,
+  FULL_WIDTH,
+} from './game';
 
 export const fillFullScreen = (ctx, color) => {
   ctx.fillStyle = color;
@@ -13,13 +19,13 @@ export const fillScreen = (ctx, color) => {
 export const drawTextScreen = (ctx, message) => {
   fillScreen(ctx, 'gray');
   ctx.fillStyle = 'black';
-  ctx.font = '48px \'Helvetica Neue\', sans-serif';
+  ctx.font = "48px 'Helvetica Neue', sans-serif";
   const textCenter = ctx.measureText(message).width / 2;
-  const xCenter = CELL_SIZE * GRID_WIDTH / 2;
-  ctx.fillText(message, xCenter - textCenter, CELL_SIZE * GRID_HEIGHT / 2);
+  const xCenter = (CELL_SIZE * GRID_WIDTH) / 2;
+  ctx.fillText(message, xCenter - textCenter, (CELL_SIZE * GRID_HEIGHT) / 2);
 };
 
-export const drawPaused = (ctx) => {
+export const drawPaused = ctx => {
   return drawTextScreen(ctx, 'PAUSED');
 };
 
@@ -31,13 +37,23 @@ export const drawBlock = (ctx, coord, color = 'gray') => {
   ctx.fillStyle = '#555';
   ctx.fillRect(coord.x * CELL_SIZE, coord.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
   ctx.fillStyle = color;
-  ctx.fillRect(coord.x * CELL_SIZE + 1, coord.y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+  ctx.fillRect(
+    coord.x * CELL_SIZE + 1,
+    coord.y * CELL_SIZE + 1,
+    CELL_SIZE - 2,
+    CELL_SIZE - 2
+  );
   const thicknss = 12;
   ctx.fillStyle = 'rgba(255,255,255, .3)';
-  ctx.fillRect(coord.x * CELL_SIZE + thicknss / 2, coord.y * CELL_SIZE + thicknss / 2, CELL_SIZE - thicknss, CELL_SIZE - thicknss);
+  ctx.fillRect(
+    coord.x * CELL_SIZE + thicknss / 2,
+    coord.y * CELL_SIZE + thicknss / 2,
+    CELL_SIZE - thicknss,
+    CELL_SIZE - thicknss
+  );
 };
 
-export const drawGrid = (ctx) => {
+export const drawGrid = ctx => {
   ctx.fillStyle = 'black'; // line color
   ctx.lineWidth = 1.0;
   ctx.beginPath();

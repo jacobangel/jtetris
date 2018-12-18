@@ -8,7 +8,7 @@ export class Coord {
       x = x.x;
     }
     if (isNaN(x) || isNaN(y)) {
-      throw new TypeError(`Invalid points (${x}, ${y})`)
+      throw new TypeError(`Invalid points (${x}, ${y})`);
     }
     this.x = x;
     this.y = y;
