@@ -27,9 +27,14 @@ export const drawGameOver = ctx => {
   return drawTextScreen(ctx, 'GAME OVER');
 };
 
-export const drawBlock = (ctx, coord) => {
-  ctx.fillStyle = 'gray';
+export const drawBlock = (ctx, coord, color = 'gray') => {
+  ctx.fillStyle = '#555';
   ctx.fillRect(coord.x * CELL_SIZE, coord.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+  ctx.fillStyle = color;
+  ctx.fillRect(coord.x * CELL_SIZE + 1, coord.y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+  const thicknss = 12;
+  ctx.fillStyle = 'rgba(255,255,255, .3)';
+  ctx.fillRect(coord.x * CELL_SIZE + thicknss / 2, coord.y * CELL_SIZE + thicknss / 2, CELL_SIZE - thicknss, CELL_SIZE - thicknss);
 };
 
 export const drawGrid = (ctx) => {

@@ -16,7 +16,7 @@ export const moveMap = {
 
 import { Logger } from './logger';
 
-import { getRandomPiece } from './tetrimo';
+import { getRandomPiece, Block } from './tetrimo';
 import { Coord } from './coord';
 import { drawPaused, drawBlock, drawGrid, fillFullScreen } from './canvasUtils';
 // import { debounce } from './debounce';
@@ -117,7 +117,7 @@ export class Tetris {
       for (let j = 0; j < this.cells[i].length; j++) {
         let cell = this.cells[i][j];
         if (cell) {
-          drawBlock(ctx, new Coord(j, i));
+          drawBlock(ctx, new Coord(j, i), cell.color);
         }
       }
     }
@@ -128,7 +128,7 @@ export class Tetris {
     if (this.activePiece) {
       const coords = this.activePiece.getCoords();
       for (let coord of coords) {
-        drawBlock(ctx, coord);
+        drawBlock(ctx, coord, this.activePiece.color);
       }
     }
   }
@@ -147,7 +147,7 @@ export class Tetris {
 
     const coords = this.activePiece.getCoords();
     for (let coord of coords) {
-      this.cells[coord.y][coord.x] = true;
+      this.cells[coord.y][coord.x] = new Block(new Coord(coord.x, coord.y), this.activePiece.color);
     }
     this.activePiece = null;
   }
