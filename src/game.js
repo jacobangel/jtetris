@@ -14,7 +14,7 @@ export const moveMap = {
   ArrowUp: [0, 0],
 };
 
-import { Logger } from './logger';
+import { Logger, LOG_LEVELS } from './logger';
 
 import { getRandomPiece, Block } from './tetrimo';
 import { Coord } from './coord';
@@ -28,7 +28,7 @@ export class Tetris {
     this.linesCleared = 0;
     // @todo add a count of "seen" pieces
     const cells = [];
-    this.logger = new Logger();
+    this.logger = new Logger(LOG_LEVELS.WARN);
     for (let i = 0; i < GRID_HEIGHT; i++) {
       cells.push([]);
       for (let j = 0; j < GRID_WIDTH; j++) {
@@ -46,7 +46,7 @@ export class Tetris {
   }
 
   addPiece() {
-    const piecePostion = [5 /**replace with math on width */, 0];
+    const piecePostion = [5 /**replace with math on width */, -1];
     const newPiece = getRandomPiece(piecePostion);
     this.activePiece = newPiece;
     this.activePiecePostion = piecePostion;
@@ -56,28 +56,36 @@ export class Tetris {
   // it would be nice if the pieces could help us more. maybe i'mve doing
   // stuff int he wrong place.
   canRotate(dir) {
-    if (!this.activePiece) return false;
-    let activeCopy = this.activePiece.getCopy();
-    activeCopy = activeCopy.rotate(dir);
-    this.logger.info(activeCopy);
-    return !activeCopy.getCoords().some(coord => {
-      this.logger.info(coord);
-      return this.hasCollision(coord);
-    });
+    if (!this.activePiece) {
+      return false;
+    }
+    return !this.activePiece
+      .rotate(dir)
+      .getCoords()
+      .some(coord => {
+        this.logger.info(coord);
+        return this.hasCollision(coord);
+      });
   }
 
-  rotatePiece(dir) {
-    if (!this.activePiece) return;
+  tryToRotatePiece(dir) {
+    if (!this.activePiece) {
+      return;
+    }
+
     if (this.canRotate(dir)) {
-      this.logger.info('can rorate!!');
-      this.activePiece.rotate(dir);
-    } else this.logger.info('cannot ratate');
+      this.logger.info('can rotate!!');
+    } else {
+      this.activePiece.rotate(dir === 'left' ? 'right' : 'left');
+      this.logger.info('cannot rotate');
+    }
   }
 
   hasCollision(cord) {
     if (cord.x < 0 || cord.x > GRID_WIDTH - 1) {
       return true;
     }
+    // I think i can take off the y check.
     if (cord.y > GRID_HEIGHT - 1 || cord.y < 0) {
       return true;
     }
@@ -134,7 +142,6 @@ export class Tetris {
 
   canFall() {
     const coords = this.activePiece.getCoords();
-    const cells = this.cells;
     this.logger.info('cehecking can fall', coords.length);
     return this.canMove(moveMap['ArrowDown']);
   }
@@ -194,7 +201,13 @@ export class Tetris {
       CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3
     );
   }
-
+  draw(ctx) {
+    fillFullScreen(ctx, 'white');
+    drawGrid(ctx);
+    this.drawPieces(ctx);
+    this.drawFallen(ctx);
+    this.drawDash(ctx);
+  }
   checkBoard() {}
 }
 
@@ -225,10 +238,10 @@ export class Game {
         break;
       case 'z':
         // better to do generic handling.
-        this.gameEngine.rotatePiece('left');
+        this.gameEngine.tryToRotatePiece('left');
         break;
       case 'x':
-        this.gameEngine.rotatePiece('right');
+        this.gameEngine.tryToRotatePiece('right');
         break;
       case 'Escape':
         this.gameEngine.pauseGame();
@@ -241,10 +254,35 @@ export class Game {
     }
   }
 
+  /**
+   * Countdown is how much time there is between each frame.
+   */
   getCountdown() {
     return this.frameRate * (11 - this.level);
   }
 
+  /**
+   * 
+   * Rough description of flow chart.
+   * 
+   * countdown = countdown - delta ?
+   * countdown <= 0 ?
+   * 
+   * set countdown = 0.05 * (11 - level);
+    active pice?
+       no
+       can spawn
+          yes spawn piece
+          no   game over
+       yes
+          can fall?
+          no
+            commit piece
+            collapse board
+          yes
+            move piece down
+     bewteen coutndown you can attempt to move
+   */
   tick(time) {
     // is Game Over?
     if (this.isGameOver()) {
@@ -259,13 +297,17 @@ export class Game {
       return;
     }
 
-    if (this.lastTick === undefined) this.lastTick = time;
+    if (this.lastTick === undefined) {
+      this.lastTick = time;
+    }
+
     const delta = time - this.lastTick;
     this.lastTick = time;
     this.countdown = this.countdown - delta;
-    // this.logger.info(`cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`)
+    this.logger.info(
+      `cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`
+    );
     if (this.countdown > 0) {
-      // this.logger.info('not yet');
       return;
     }
 
@@ -273,38 +315,24 @@ export class Game {
       this.logger.info('showing tick!');
     }
     this.countdown = this.getCountdown();
+
     if (!this.gameEngine.hasActivePiece()) {
       if (this.gameEngine.canSpawnPiece()) {
         this.gameEngine.addPiece();
+        return;
       } else {
         this.gameOver = true;
         return;
       }
     }
+
     if (!this.gameEngine.canFall()) {
       this.gameEngine.commit();
       this.gameEngine.collapse();
     } else {
       this.gameEngine.movePiece(moveMap['ArrowDown']);
     }
-    // countdown = countdown - delta ?
-    // countdown <= 0 ?
-    //
-    // set countdown = 0.05 * (11 - level);
-    // active pice?
-    //   no
-    //   can spawn
-    //      yes spawn piece
-    //      no   game over
-    //   yes
-    //      can fall?
-    //      no
-    //        commit piece
-    //        collapse board
-    //      yes
-    //        move piece down
 
-    // bewteen coutndown you can attempt to move
     this.renderFrame();
   }
 
@@ -332,8 +360,6 @@ export class Game {
     this.root.appendChild(canvas);
   }
 
-  renderBoard(height, width) {}
-
   renderFrame(time) {
     if (this.isGameOver()) {
       this.gameEngine.drawGameOver();
@@ -346,10 +372,6 @@ export class Game {
 
     this.lastFrame = time;
     this.logger.info('Game rendering');
-    fillFullScreen(this.ctx, 'white');
-    drawGrid(this.ctx);
-    this.gameEngine.drawPieces(this.ctx);
-    this.gameEngine.drawFallen(this.ctx);
-    this.gameEngine.drawDash(this.ctx);
+    this.gameEngine.draw(this.ctx);
   }
 }
