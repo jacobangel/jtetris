@@ -10,12 +10,12 @@ let game = new Game({
   document,
 });
 const globalLogger = new Logger(LOG_LEVELS.WARN);
-
 const setShouldRender = val => (shouldRender = val);
 
 const renderLoop = () => {
   if (shouldRender) {
     globalLogger.trace('animating!');
+    game.renderFrame();
     game.tick(Date.now());
   }
   window.requestAnimationFrame(renderLoop);

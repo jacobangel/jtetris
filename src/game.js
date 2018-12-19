@@ -318,14 +318,12 @@ export class Game {
     // is Game Over?
     if (this.isGameOver()) {
       this.logger.info('game over!');
-      this.renderFrame();
       return;
     }
 
     // is Game Paused?
     if (this.isPaused()) {
       this.logger.info('paused');
-      this.renderFrame();
       return;
     }
 
@@ -340,7 +338,6 @@ export class Game {
       `cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`
     );
     if (this.countdown > 0) {
-      this.renderFrame();
       return;
     }
 
@@ -352,11 +349,9 @@ export class Game {
     if (!this.gameEngine.hasActivePiece()) {
       if (this.gameEngine.canSpawnNextPiece()) {
         this.gameEngine.addPiece();
-        this.renderFrame();
         return;
       } else {
         this.gameOver = true;
-        this.renderFrame();
         return;
       }
     }
@@ -367,8 +362,6 @@ export class Game {
     } else {
       this.gameEngine.movePiece(moveMap['ArrowDown']);
     }
-
-    this.renderFrame();
   }
 
   isPaused() {
