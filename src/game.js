@@ -2,7 +2,7 @@ export const GRID_WIDTH = 10;
 export const GRID_HEIGHT = 20;
 export const CELL_SIZE = 30; //px
 export const DASHBOARD_HEIGHT = CELL_SIZE * 3;
-export const SIDEBAR_WIDTH = CELL_SIZE * 3;
+export const SIDEBAR_WIDTH = CELL_SIZE * 5;
 export const BOARD_HEIGHT = GRID_HEIGHT * CELL_SIZE;
 export const BOARD_WIDTH = GRID_WIDTH * CELL_SIZE;
 export const FULL_HEIGHT = BOARD_HEIGHT + DASHBOARD_HEIGHT;
@@ -16,9 +16,9 @@ export const moveMap = {
 
 import { Logger, LOG_LEVELS } from './logger';
 
-import { getRandomPiece, Block } from './tetrimo';
+import { getRandomPiece, Block, Tetrimo } from './tetrimo';
 import { Coord } from './coord';
-import { drawPaused, drawBlock, drawGrid, fillFullScreen } from './canvasUtils';
+import { drawPaused, drawBlock, drawGrid, fillFullScreen, drawTextScreen, drawGameOver } from './canvasUtils';
 // import { debounce } from './debounce';
 
 export class Tetris {
@@ -35,21 +35,26 @@ export class Tetris {
         cells[i].push(null);
       }
     }
-
     this.cells = cells;
+    this.pieceQueue = [this.getRandomPiece()];
+  }
+
+  getRandomPiece() {
+    const piecePostion = [5 /**replace with math on width */, 0];
+    const newPiece = getRandomPiece(piecePostion);
+    return newPiece;
   }
 
   start() {}
 
-  canSpawnPiece() {
-    return true;
+  canSpawnNextPiece() {
+    const piece = this.pieceQueue[0];
+    return !this.hasCollision(piece) && piece.getCoords().some(coord => coord.y > -1);
   }
 
   addPiece() {
-    const piecePostion = [5 /**replace with math on width */, -1];
-    const newPiece = getRandomPiece(piecePostion);
-    this.activePiece = newPiece;
-    this.activePiecePostion = piecePostion;
+    this.pieceQueue.push(this.getRandomPiece());
+    this.activePiece = this.pieceQueue.shift();
   }
 
   // left or right
@@ -82,12 +87,19 @@ export class Tetris {
   }
 
   hasCollision(cord) {
+    if (cord instanceof Tetrimo) {
+      return cord.getCoords().some(this.hasCollision, this);
+    }
     if (cord.x < 0 || cord.x > GRID_WIDTH - 1) {
       return true;
     }
     // I think i can take off the y check.
-    if (cord.y > GRID_HEIGHT - 1 || cord.y < 0) {
+    if (cord.y > GRID_HEIGHT - 1) {
       return true;
+    }
+
+    if (cord.y < 0) {
+      return false;
     }
 
     return Boolean(this.cells[cord.y][cord.x]);
@@ -112,6 +124,10 @@ export class Tetris {
 
   hasActivePiece() {
     return Boolean(this.activePiece);
+  }
+
+  drawGameOver(ctx) {
+    drawGameOver(ctx);
   }
 
   drawPaused(ctx) {
@@ -201,12 +217,22 @@ export class Tetris {
       CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3
     );
   }
+  drawNextPiece(ctx) {
+    const nextPiece = this.pieceQueue[0];
+    if (nextPiece) {
+      const coords = nextPiece.getCoords();
+      for (let coord of coords) {
+        drawBlock(ctx, Coord.transform(coord, [8, 2]), nextPiece.color);
+      }
+    }
+  }
   draw(ctx) {
     fillFullScreen(ctx, 'white');
     drawGrid(ctx);
     this.drawPieces(ctx);
     this.drawFallen(ctx);
     this.drawDash(ctx);
+    this.drawNextPiece(ctx);
   }
   checkBoard() {}
 }
@@ -218,12 +244,16 @@ export class Game {
     this.document = document;
     this.attachElements();
     this.frameRate = 50; //20hertz in milliseconds
+    this.handleInput = this.handleInput.bind(this);
+    // this.handleInput = debounce(this.handleInput, this.frameRate / 4);
+    this.startGame();
+  }
+
+  startGame() {
     this.level = 1;
     this.countdown = this.getCountdown();
     this.gameOver = false;
     this.paused = false;
-    this.handleInput = this.handleInput.bind(this);
-    // this.handleInput = debounce(this.handleInput, this.frameRate / 4);
     this.gameEngine = new Tetris();
     this.gameEngine.start();
   }
@@ -244,10 +274,11 @@ export class Game {
         this.gameEngine.tryToRotatePiece('right');
         break;
       case 'Escape':
-        this.gameEngine.pauseGame();
+        this.pauseGame();
         break;
       case 'Enter':
-        this.gameEngine.unpauseGame();
+        if (this.isPaused()) this.unpauseGame();
+        if (this.isGameOver()) this.startGame();
         break;
       default:
         this.logger.info(`Unhandled input:`, e);
@@ -287,6 +318,7 @@ export class Game {
     // is Game Over?
     if (this.isGameOver()) {
       this.logger.info('game over!');
+      this.renderFrame();
       return;
     }
 
@@ -308,6 +340,7 @@ export class Game {
       `cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`
     );
     if (this.countdown > 0) {
+      this.renderFrame();
       return;
     }
 
@@ -317,11 +350,13 @@ export class Game {
     this.countdown = this.getCountdown();
 
     if (!this.gameEngine.hasActivePiece()) {
-      if (this.gameEngine.canSpawnPiece()) {
+      if (this.gameEngine.canSpawnNextPiece()) {
         this.gameEngine.addPiece();
+        this.renderFrame();
         return;
       } else {
         this.gameOver = true;
+        this.renderFrame();
         return;
       }
     }
@@ -362,7 +397,7 @@ export class Game {
 
   renderFrame(time) {
     if (this.isGameOver()) {
-      this.gameEngine.drawGameOver();
+      this.gameEngine.drawGameOver(this.ctx);
       return;
     }
     if (this.isPaused()) {

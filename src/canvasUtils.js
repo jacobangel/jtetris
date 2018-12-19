@@ -25,12 +25,12 @@ export const drawTextScreen = (ctx, message) => {
   ctx.fillText(message, xCenter - textCenter, (CELL_SIZE * GRID_HEIGHT) / 2);
 };
 
-export const drawPaused = ctx => {
-  return drawTextScreen(ctx, 'PAUSED');
-};
-
 export const drawGameOver = ctx => {
-  return drawTextScreen(ctx, 'GAME OVER');
+  drawTextScreen(ctx, 'GAMEOVER');
+}
+
+export const drawPaused = ctx => {
+  drawTextScreen(ctx, 'PAUSED');
 };
 
 export const drawBlock = (ctx, coord, color = 'gray') => {
