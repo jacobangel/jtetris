@@ -23,7 +23,8 @@ import { drawPaused, drawBlock, drawGrid, fillFullScreen, drawTextScreen, drawGa
 
 export class Tetris {
   constructor() {
-    this.level = 1;
+    this.startingLevel = 1;
+    this.rowsDropped = 0;
     this.score = 0;
     this.linesCleared = 0;
     // @todo add a count of "seen" pieces
@@ -37,6 +38,27 @@ export class Tetris {
     }
     this.cells = cells;
     this.pieceQueue = [this.getRandomPiece()];
+  }
+
+  get level() {
+    let earnedLevel = Tetris.computeEarnedLevel(this.linesCleared);
+    return Math.max(this.startingLevel, earnedLevel);
+  }
+
+  static getPointsAward(actualLevel, linesCleared, rowsDropped) {
+    // this is the original score:
+    // return ( ( (21 +  3 * actualLevel) - rowsFreeFell) ) * Math.pow(linesCleared);
+    const lineBonus = [0, 40, 100, 300, 1200];
+    return lineBonus[linesCleared] * (actualLevel + 1) + rowsDropped; // is there a level zero??
+  }
+
+  static computeEarnedLevel(linesCleared) {
+    if (linesCleared <= 0) {
+      return 1;
+    } else if (linesCleared > 0 && linesCleared <= 90) {
+      return 1 + Math.floor((linesCleared - 1) / 10);
+    }  
+    return 10;
   }
 
   getRandomPiece() {
@@ -113,9 +135,12 @@ export class Tetris {
     return !proposedMove.some(this.hasCollision, this);
   }
 
-  movePiece(move) {
+  movePiece(move, forced = false) {
     // should be using type script you dummy.
     if (this.canMove(move)) {
+      if (forced) {
+        this.rowsDropped += 1;
+      }
       this.activePiece.move(move);
     }
     //this.checkCollisions();
@@ -162,6 +187,10 @@ export class Tetris {
     return this.canMove(moveMap['ArrowDown']);
   }
 
+  scoreLines(removed) {
+    return Tetris.getPointsAward(this.level, parseInt(removed, 10), 0);
+  }
+
   commit() {
     if (!this.activePiece) {
       throw new Error("Cannot commit a piece that doesn't exist");
@@ -174,14 +203,7 @@ export class Tetris {
         this.activePiece.color
       );
     }
-    this.activePiece = null;
-  }
 
-  scoreLines(removed) {
-    return this.level * removed * removed;
-  }
-
-  collapse() {
     // we need to count how many are collapsed for points!
     let removed = 0;
     for (let y = 0; y < this.cells.length; y++) {
@@ -194,8 +216,11 @@ export class Tetris {
       }
     }
     // this assumes that all scores are contiguous
-    this.score += this.scoreLines(removed);
+    this.score += this.scoreLines(removed, this.rowsDropped);
     this.linesCleared += removed;
+    // this would be cleaner somewhere else i think.
+    this.rowsDropped = 0;
+    this.activePiece = null;
   }
 
   drawDash(ctx) {
@@ -358,7 +383,6 @@ export class Game {
 
     if (!this.gameEngine.canFall()) {
       this.gameEngine.commit();
-      this.gameEngine.collapse();
     } else {
       this.gameEngine.movePiece(moveMap['ArrowDown']);
     }
