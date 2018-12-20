@@ -12,7 +12,9 @@ export class Tetrimo {
   }
 
   getCopy() {
-    return new this.constructor([this.center.x, this.center.y]);
+    const copy = new this.constructor([this.center.x, this.center.y]);
+    copy.index = this.index;
+    return copy;
   }
 
   get coords() {
@@ -34,7 +36,7 @@ export class Tetrimo {
   }
 
   rotate(dir) {
-    if (dir === 'left') {
+    if (dir === TETRIMO_DIR.LEFT) {
       this.setIndex(-1);
     } else {
       this.setIndex(1);
@@ -130,6 +132,11 @@ export class Block extends Tetrimo {
     this.color = color;
   }
 }
+
+export const TETRIMO_DIR = {
+  LEFT: 'left',
+  RIGHT: 'right',
+};
 
 export const TETRIMO_TYPES = {
   O: OPiece,

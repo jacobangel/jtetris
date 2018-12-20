@@ -16,9 +16,16 @@ export const moveMap = {
 
 import { Logger, LOG_LEVELS } from './logger';
 
-import { getRandomPiece, Block, Tetrimo } from './tetrimo';
+import { getRandomPiece, Block, Tetrimo, TETRIMO_DIR } from './tetrimo';
 import { Coord } from './coord';
-import { drawPaused, drawBlock, drawGrid, fillFullScreen, drawTextScreen, drawGameOver } from './canvasUtils';
+import {
+  drawPaused,
+  drawBlock,
+  drawGrid,
+  fillFullScreen,
+  drawTextScreen,
+  drawGameOver,
+} from './canvasUtils';
 // import { debounce } from './debounce';
 
 export class Tetris {
@@ -45,9 +52,9 @@ export class Tetris {
     return Math.max(this.startingLevel, earnedLevel);
   }
 
+  // this is the original score:
+  // return ( ( (21 +  3 * actualLevel) - rowsFreeFell) ) * Math.pow(linesCleared);
   static getPointsAward(actualLevel, linesCleared, rowsDropped) {
-    // this is the original score:
-    // return ( ( (21 +  3 * actualLevel) - rowsFreeFell) ) * Math.pow(linesCleared);
     const lineBonus = [0, 40, 100, 300, 1200];
     return lineBonus[linesCleared] * (actualLevel + 1) + rowsDropped; // is there a level zero??
   }
@@ -57,9 +64,11 @@ export class Tetris {
       return 1;
     } else if (linesCleared > 0 && linesCleared <= 90) {
       return 1 + Math.floor((linesCleared - 1) / 10);
-    }  
+    }
     return 10;
   }
+
+  start() {}
 
   getRandomPiece() {
     const piecePostion = [5 /**replace with math on width */, 0];
@@ -67,11 +76,11 @@ export class Tetris {
     return newPiece;
   }
 
-  start() {}
-
   canSpawnNextPiece() {
     const piece = this.pieceQueue[0];
-    return !this.hasCollision(piece) && piece.getCoords().some(coord => coord.y > -1);
+    return (
+      !this.hasCollision(piece) && piece.getCoords().some(coord => coord.y > -1)
+    );
   }
 
   addPiece() {
@@ -82,11 +91,11 @@ export class Tetris {
   // left or right
   // it would be nice if the pieces could help us more. maybe i'mve doing
   // stuff int he wrong place.
-  canRotate(dir) {
-    if (!this.activePiece) {
+  canRotate(activePiece, dir) {
+    if (!activePiece) {
       return false;
     }
-    return !this.activePiece
+    return !activePiece
       .rotate(dir)
       .getCoords()
       .some(coord => {
@@ -95,16 +104,22 @@ export class Tetris {
       });
   }
 
+  /**
+   * This is a really ugly way to do this. We try to rotate,
+   * if we can't then who cares, we just undo the rotation.
+   * @param {TETRIMO_DIR} dir
+   */
   tryToRotatePiece(dir) {
     if (!this.activePiece) {
       return;
     }
-
-    if (this.canRotate(dir)) {
-      this.logger.info('can rotate!!');
+    if (!this.canRotate(this.activePiece, dir)) {
+      this.activePiece.rotate(
+        dir === TETRIMO_DIR.LEFT ? TETRIMO_DIR.RIGHT : TETRIMO_DIR.LEFT
+      );
+      this.logger.info('Could not rotate piece, undoing the rotation.');
     } else {
-      this.activePiece.rotate(dir === 'left' ? 'right' : 'left');
-      this.logger.info('cannot rotate');
+      this.logger.info('Rotation was accepted.');
     }
   }
 
@@ -187,8 +202,8 @@ export class Tetris {
     return this.canMove(moveMap['ArrowDown']);
   }
 
-  scoreLines(removed) {
-    return Tetris.getPointsAward(this.level, parseInt(removed, 10), 0);
+  scoreLines(removed, dropped) {
+    return Tetris.getPointsAward(this.level, parseInt(removed, 10), dropped);
   }
 
   commit() {
@@ -223,6 +238,7 @@ export class Tetris {
     this.activePiece = null;
   }
 
+  // this should be a helper...
   drawDash(ctx) {
     ctx.fillStyle = 'black';
     ctx.font = "12px 'Helvetica Neue', sans-serif";
@@ -242,6 +258,7 @@ export class Tetris {
       CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3
     );
   }
+
   drawNextPiece(ctx) {
     const nextPiece = this.pieceQueue[0];
     if (nextPiece) {
@@ -259,7 +276,6 @@ export class Tetris {
     this.drawDash(ctx);
     this.drawNextPiece(ctx);
   }
-  checkBoard() {}
 }
 
 export class Game {
@@ -275,11 +291,11 @@ export class Game {
   }
 
   startGame() {
-    this.level = 1;
+    this.gameEngine = new Tetris();
     this.countdown = this.getCountdown();
     this.gameOver = false;
     this.paused = false;
-    this.gameEngine = new Tetris();
+    this.gameStarted = true;
     this.gameEngine.start();
   }
 
@@ -287,16 +303,18 @@ export class Game {
     switch (e.key) {
       case 'ArrowLeft':
       case 'ArrowRight':
-      case 'ArrowDown':
       case 'ArrowUp':
         this.gameEngine.movePiece(moveMap[e.key]);
         break;
+      case 'ArrowDown':
+        this.gameEngine.movePiece(moveMap[e.key], true);
+        break;
       case 'z':
         // better to do generic handling.
-        this.gameEngine.tryToRotatePiece('left');
+        this.gameEngine.tryToRotatePiece(TETRIMO_DIR.LEFT);
         break;
       case 'x':
-        this.gameEngine.tryToRotatePiece('right');
+        this.gameEngine.tryToRotatePiece(TETRIMO_DIR.RIGHT);
         break;
       case 'Escape':
         this.pauseGame();
@@ -314,7 +332,7 @@ export class Game {
    * Countdown is how much time there is between each frame.
    */
   getCountdown() {
-    return this.frameRate * (11 - this.level);
+    return this.frameRate * (11 - this.gameEngine.level);
   }
 
   /**
@@ -343,6 +361,11 @@ export class Game {
     // is Game Over?
     if (this.isGameOver()) {
       this.logger.info('game over!');
+      return;
+    }
+
+    if (!this.isGameStarted()) {
+      this.logger.info('game is waiting to start!');
       return;
     }
 
@@ -376,7 +399,7 @@ export class Game {
         this.gameEngine.addPiece();
         return;
       } else {
-        this.gameOver = true;
+        this.endGame();
         return;
       }
     }
@@ -386,6 +409,15 @@ export class Game {
     } else {
       this.gameEngine.movePiece(moveMap['ArrowDown']);
     }
+  }
+
+  endGame() {
+    this.gameOver = true;
+    this.gameStarted = false;
+  }
+
+  isGameStarted() {
+    return this.gameStarted;
   }
 
   isPaused() {

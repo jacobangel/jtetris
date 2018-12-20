@@ -27,7 +27,7 @@ export const drawTextScreen = (ctx, message) => {
 
 export const drawGameOver = ctx => {
   drawTextScreen(ctx, 'GAME OVER');
-}
+};
 
 export const drawPaused = ctx => {
   drawTextScreen(ctx, 'PAUSED');
