@@ -268,6 +268,13 @@ export class Tetris {
       }
     }
   }
+  /**
+   * @todo refactor the draw methods to abstract away the drawing methods.
+   * too much duplications or empty pass through to the utils. Basically
+   * should probably merge the game and tetris classes, and factor out 
+   * a view layer like a sane person, passing in the various state for 
+   * rendering so we can swap out all the math and stuff.
+   */
   draw(ctx) {
     fillFullScreen(ctx, 'white');
     drawGrid(ctx);
@@ -300,6 +307,9 @@ export class Game {
   }
 
   handleInput(e) {
+    /**
+     * @todo add input modes based on whether the game is started.
+     */
     switch (e.key) {
       case 'ArrowLeft':
       case 'ArrowRight':
