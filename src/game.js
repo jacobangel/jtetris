@@ -166,15 +166,6 @@ export class Tetris {
     return Boolean(this.activePiece);
   }
 
-  drawGameOver(ctx) {
-    drawGameOver(ctx);
-  }
-
-  drawPaused(ctx) {
-    // draw grey
-    drawPaused(ctx);
-  }
-
   drawFallen(ctx) {
     for (let i = 0; i < this.cells.length; i++) {
       for (let j = 0; j < this.cells[i].length; j++) {
@@ -275,7 +266,7 @@ export class Tetris {
    * a view layer like a sane person, passing in the various state for 
    * rendering so we can swap out all the math and stuff.
    */
-  draw(ctx) {
+  drawGame(ctx) {
     fillFullScreen(ctx, 'white');
     drawGrid(ctx);
     this.drawPieces(ctx);
@@ -456,16 +447,16 @@ export class Game {
 
   renderFrame(time) {
     if (this.isGameOver()) {
-      this.gameEngine.drawGameOver(this.ctx);
+      drawGameOver(this.ctx);
       return;
     }
     if (this.isPaused()) {
-      this.gameEngine.drawPaused(this.ctx);
+      drawPaused(this.ctx);
       return;
     }
 
     this.lastFrame = time;
     this.logger.info('Game rendering');
-    this.gameEngine.draw(this.ctx);
+    this.gameEngine.drawGame(this.ctx);
   }
 }

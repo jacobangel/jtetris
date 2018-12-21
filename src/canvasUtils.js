@@ -19,7 +19,7 @@ export const fillScreen = (ctx, color) => {
 export const drawTextScreen = (ctx, message) => {
   fillScreen(ctx, 'gray');
   ctx.fillStyle = 'black';
-  ctx.font = "48px 'Helvetica Neue', sans-serif";
+  ctx.font = "48px 'Roboto Slab', sans-serif";
   const textCenter = ctx.measureText(message).width / 2;
   const xCenter = (CELL_SIZE * GRID_WIDTH) / 2;
   ctx.fillText(message, xCenter - textCenter, (CELL_SIZE * GRID_HEIGHT) / 2);
@@ -52,10 +52,21 @@ export const drawBlock = (ctx, coord, color = 'gray') => {
     CELL_SIZE - thicknss
   );
 };
+export const drawBorder = ctx => {
+  ctx.lineWidth = 1.0;
+  ctx.strokeStyle = 'black'; // line color
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, GRID_HEIGHT * CELL_SIZE);
+  ctx.lineTo(GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
+  ctx.lineTo(GRID_WIDTH * CELL_SIZE, 0);
+  ctx.lineTo(0, 0);
+  ctx.stroke();
+};
 
 export const drawGrid = ctx => {
-  ctx.fillStyle = 'black'; // line color
   ctx.lineWidth = 1.0;
+  ctx.strokeStyle = '#CCC'; // line color
   ctx.beginPath();
   ctx.moveTo(0, 0);
   for (let y = 0; y <= GRID_HEIGHT; y++) {
@@ -68,4 +79,5 @@ export const drawGrid = ctx => {
     ctx.lineTo(x * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
   }
   ctx.stroke();
+  drawBorder(ctx);
 };

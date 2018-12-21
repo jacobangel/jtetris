@@ -1,12 +1,17 @@
 import { Coord } from './coord';
 
+export const TETRIMO_DIR = {
+  LEFT: 'left',
+  RIGHT: 'right',
+};
+
 export class Tetrimo {
   constructor(center, color = 'grey') {
     if (Array.isArray(center)) {
       center = Coord.fromArray(center);
     }
     this.center = center;
-    this._coords = [[[0, 0]]];
+    this.__coords = [[[0, 0]]];
     this.index = 0;
     this.color = color;
   }
@@ -18,7 +23,7 @@ export class Tetrimo {
   }
 
   get coords() {
-    return this._coords[this.index];
+    return this.__coords[this.index];
   }
 
   move(dir) {
@@ -29,8 +34,8 @@ export class Tetrimo {
   setIndex(bump) {
     this.index += bump;
     if (this.index < 0) {
-      this.index = this._coords.length - 1;
-    } else if (this.index > this._coords.length - 1) {
+      this.index = this.__coords.length - 1;
+    } else if (this.index > this.__coords.length - 1) {
       this.index = 0;
     }
   }
@@ -52,17 +57,17 @@ export class Tetrimo {
 }
 
 export class OPiece extends Tetrimo {
-  constructor(props, color = 'yellow') {
+  constructor(props, color = 'rgba(193, 193, 10, 1') {
     super(props, color);
-    this._coords = [[[0, 0], [-1, 0], [0, 1], [-1, 1]]];
+    this.__coords = [[[0, 0], [-1, 0], [0, 1], [-1, 1]]];
   }
 }
 
 export class IPiece extends Tetrimo {
-  constructor(props, color = 'cyan') {
+  constructor(props, color = 'rgba(21, 197, 197, 1)') {
     super(props, color);
     this.color = color;
-    this._coords = [
+    this.__coords = [
       [[0, 0], [-1, 0], [1, 0], [-2, 0]],
       [[0, -1], [0, 0], [0, 1], [0, 2]],
     ];
@@ -72,7 +77,7 @@ export class IPiece extends Tetrimo {
 export class SPiece extends Tetrimo {
   constructor(props, color = 'green') {
     super(props, color);
-    this._coords = [
+    this.__coords = [
       [[0, 0], [1, 0], [0, 1], [-1, 1]],
       [[0, 0], [0, -1], [1, 1], [1, 0]],
     ];
@@ -82,7 +87,7 @@ export class SPiece extends Tetrimo {
 export class ZPiece extends Tetrimo {
   constructor(props, color = 'red') {
     super(props, color);
-    this._coords = [
+    this.__coords = [
       [[-1, 0], [0, 0], [0, 1], [1, 1]],
       [[0, 0], [1, 0], [1, -1], [0, 1]],
     ];
@@ -90,10 +95,10 @@ export class ZPiece extends Tetrimo {
 }
 
 export class LPiece extends Tetrimo {
-  constructor(props, color = 'orange') {
+  constructor(props, color = 'rgb(240, 111, 20)' /** orange */) {
     super(props, color);
 
-    this._coords = [
+    this.__coords = [
       [[-1, 1], [-1, 0], [0, 0], [1, 0]],
       [[0, -1], [0, 0], [0, 1], [-1, -1]],
       [[-1, 0], [0, 0], [1, 0], [1, -1]],
@@ -105,7 +110,7 @@ export class LPiece extends Tetrimo {
 export class JPiece extends Tetrimo {
   constructor(props, color = 'blue') {
     super(props, color);
-    this._coords = [
+    this.__coords = [
       [[-1, 0], [0, 0], [1, 0], [1, 1]],
       [[0, 0], [0, 1], [0, -1], [-1, 1]],
       [[-1, 0], [0, 0], [1, 0], [-1, -1]],
@@ -117,7 +122,7 @@ export class JPiece extends Tetrimo {
 export class TPiece extends Tetrimo {
   constructor(props, color = 'magenta') {
     super(props, color);
-    this._coords = [
+    this.__coords = [
       [[0, 0], [-1, 0], [1, 0], [0, 1]],
       [[0, -1], [0, 0], [0, 1], [1, 0]],
       [[0, 0], [-1, 0], [1, 0], [0, -1]],
@@ -132,11 +137,6 @@ export class Block extends Tetrimo {
     this.color = color;
   }
 }
-
-export const TETRIMO_DIR = {
-  LEFT: 'left',
-  RIGHT: 'right',
-};
 
 export const TETRIMO_TYPES = {
   O: OPiece,
