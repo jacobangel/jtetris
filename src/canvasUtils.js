@@ -19,7 +19,7 @@ export const fillScreen = (ctx, color) => {
 export const drawTextScreen = (ctx, message) => {
   fillScreen(ctx, 'gray');
   ctx.fillStyle = 'black';
-  ctx.font = "48px 'Roboto Slab', sans-serif";
+  ctx.font = "36px 'Roboto Slab', sans-serif";
   const textCenter = ctx.measureText(message).width / 2;
   const xCenter = (CELL_SIZE * GRID_WIDTH) / 2;
   ctx.fillText(message, xCenter - textCenter, (CELL_SIZE * GRID_HEIGHT) / 2);
