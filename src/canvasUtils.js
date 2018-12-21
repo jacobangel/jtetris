@@ -18,7 +18,7 @@ export const fillScreen = (ctx, color) => {
 };
 
 export const drawLevelSelect = (ctx, levels, currentLevel) => {
-  console.log(levels, currentLevel);
+  // console.log(levels, currentLevel);
 }
 
 export const drawStartScreen = (ctx) => {

@@ -7,6 +7,7 @@ export const BOARD_HEIGHT = GRID_HEIGHT * CELL_SIZE;
 export const BOARD_WIDTH = GRID_WIDTH * CELL_SIZE;
 export const FULL_HEIGHT = BOARD_HEIGHT + DASHBOARD_HEIGHT;
 export const FULL_WIDTH = BOARD_WIDTH + SIDEBAR_WIDTH;
+
 export const moveMap = {
   ArrowLeft: [-1, 0],
   ArrowRight: [1, 0],
@@ -24,15 +25,14 @@ import {
   drawGrid,
   fillFullScreen,
   drawLevelSelect,
-  drawTextScreen,
   drawStartScreen,
   drawGameOver,
 } from './canvasUtils';
-// import { debounce } from './debounce';
 
 export class Tetris {
-  constructor() {
-    this.startingLevel = 1;
+  constructor({ startingLevel = 1, frameRate = 50 }) {
+    this.frameRate = frameRate;
+    this.startingLevel = startingLevel;
     this.rowsDropped = 0;
     this.score = 0;
     this.linesCleared = 0;
@@ -47,6 +47,8 @@ export class Tetris {
     }
     this.cells = cells;
     this.pieceQueue = [this.getRandomPiece()];
+    this.countdown = this.getCountdown();
+    this.gameOver = false;
   }
 
   get level() {
@@ -71,6 +73,75 @@ export class Tetris {
   }
 
   start() {}
+  /**
+   * Countdown is how much time there is between each frame.
+   */
+  getCountdown() {
+    return this.frameRate * (11 - this.level);
+  }
+
+  /**
+   * 
+   * Rough description of flow chart.
+   * 
+   * countdown = countdown - delta ?
+   * countdown <= 0 ?
+   * 
+   * set countdown = 0.05 * (11 - level);
+    active pice?
+       no
+       can spawn
+          yes spawn piece
+          no   game over
+       yes
+          can fall?
+          no
+            commit piece
+            collapse board
+          yes
+            move piece down
+     bewteen coutndown you can attempt to move
+   */
+  processTick(time) {
+    if (this.lastTick === undefined) {
+      this.lastTick = time;
+    }
+
+    const delta = time - this.lastTick;
+    this.lastTick = time;
+    this.countdown = this.countdown - delta;
+    this.logger.info(
+      `cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`
+    );
+    if (this.countdown > 0) {
+      return;
+    }
+
+    if (this.countdown <= 0) {
+      this.logger.info('showing tick!');
+    }
+    this.countdown = this.getCountdown();
+
+    if (!this.hasActivePiece()) {
+      if (this.canSpawnNextPiece()) {
+        this.addPiece();
+        return;
+      } else {
+        this.endGame();
+        return false;
+      }
+    }
+
+    if (this.canFall()) {
+      this.movePiece(moveMap['ArrowDown']);
+    } else {
+      this.commit();
+    }
+  }
+
+  endGame() {
+    this.gameOver = true;
+  }
 
   getRandomPiece() {
     const piecePostion = [5 /**replace with math on width */, 0];
@@ -167,28 +238,6 @@ export class Tetris {
   hasActivePiece() {
     return Boolean(this.activePiece);
   }
-
-  drawFallen(ctx) {
-    for (let i = 0; i < this.cells.length; i++) {
-      for (let j = 0; j < this.cells[i].length; j++) {
-        let cell = this.cells[i][j];
-        if (cell) {
-          drawBlock(ctx, new Coord(j, i), cell.color);
-        }
-      }
-    }
-  }
-
-  drawPieces(ctx) {
-    // get a piece at random.
-    if (this.activePiece) {
-      const coords = this.activePiece.getCoords();
-      for (let coord of coords) {
-        drawBlock(ctx, coord, this.activePiece.color);
-      }
-    }
-  }
-
   canFall() {
     const coords = this.activePiece.getCoords();
     this.logger.info('cehecking can fall', coords.length);
@@ -231,29 +280,49 @@ export class Tetris {
     this.activePiece = null;
   }
 
+  drawFallen(ctx, cells) {
+    for (let i = 0; i < cells.length; i++) {
+      for (let j = 0; j < cells[i].length; j++) {
+        let cell = cells[i][j];
+        if (cell) {
+          drawBlock(ctx, new Coord(j, i), cell.color);
+        }
+      }
+    }
+  }
+
+  drawPiece(ctx) {
+    // get a piece at random.
+    if (this.activePiece) {
+      const coords = this.activePiece.getCoords();
+      for (let coord of coords) {
+        drawBlock(ctx, coord, this.activePiece.color);
+      }
+    }
+  }
+
   // this should be a helper...
-  drawDash(ctx) {
+  drawDash(ctx, { level, score, linesCleared }) {
     ctx.fillStyle = 'black';
     ctx.font = "12px 'Helvetica Neue', sans-serif";
     ctx.fillText(
-      `Level: ${this.level}`,
+      `Level: ${level}`,
       CELL_SIZE,
       CELL_SIZE * GRID_HEIGHT + CELL_SIZE
     );
     ctx.fillText(
-      `Score: ${this.score}`,
+      `Score: ${score}`,
       CELL_SIZE,
       CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 2
     );
     ctx.fillText(
-      `Cleared: ${this.linesCleared}`,
+      `Cleared: ${linesCleared}`,
       CELL_SIZE,
       CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3
     );
   }
 
-  drawNextPiece(ctx) {
-    const nextPiece = this.pieceQueue[0];
+  drawNextPiece(ctx, nextPiece) {
     if (nextPiece) {
       const coords = nextPiece.getCoords();
       for (let coord of coords) {
@@ -261,20 +330,25 @@ export class Tetris {
       }
     }
   }
+
   /**
    * @todo refactor the draw methods to abstract away the drawing methods.
    * too much duplications or empty pass through to the utils. Basically
-   * should probably merge the game and tetris classes, and factor out 
-   * a view layer like a sane person, passing in the various state for 
+   * should probably merge the game and tetris classes, and factor out
+   * a view layer like a sane person, passing in the various state for
    * rendering so we can swap out all the math and stuff.
    */
   drawGame(ctx) {
     fillFullScreen(ctx, 'white');
     drawGrid(ctx);
-    this.drawPieces(ctx);
-    this.drawFallen(ctx);
-    this.drawDash(ctx);
-    this.drawNextPiece(ctx);
+    this.drawPiece(ctx, this.activePiece);
+    this.drawFallen(ctx, this.cells);
+    this.drawDash(ctx, {
+      linesCleared: this.linesCleared,
+      level: this.level,
+      score: this.score,
+    });
+    this.drawNextPiece(ctx, this.pieceQueue[0]);
   }
 }
 
@@ -299,8 +373,8 @@ export class Game {
   initGame() {
     this.gameEngine = new Tetris({
       startingLevel: this.startingLevel,
+      frameRate: this.frameRate,
     });
-    this.countdown = this.getCountdown();
     this.gameOver = false;
     this.paused = false;
     this.gameStarted = false;
@@ -312,7 +386,7 @@ export class Game {
       this.handleGameOverInput(e.key);
     } else if (this.isPaused()) {
       this.handlePausedInput(e.key);
-    } else if(this.isGameStarted()) {
+    } else if (this.isGameStarted()) {
       this.handleGameInput(e.key);
     } else if (this.isWaitingToStart()) {
       this.handleStartInput(e.key);
@@ -329,7 +403,7 @@ export class Game {
         break;
 
       default:
-      this.handleFreeInput({ key });
+        this.handleFreeInput({ key });
     }
   }
 
@@ -371,15 +445,15 @@ export class Game {
       case 'x':
       case 'Esc':
       case 'Enter':
-      this.initGame();
+        this.initGame();
 
       default:
-      this.logger.info('Unhandled input to game over.', key);
+        this.logger.info('Unhandled input to game over.', key);
     }
   }
 
   handleStartInput(key) {
-     this.logger.info(`handle start input:`, key);
+    this.logger.info(`handle start input:`, key);
     /**
      * @todo add input modes based on whether the game is started.
      */
@@ -408,7 +482,7 @@ export class Game {
   }
 
   handleFreeInput(e) {
-     this.logger.info(`Unhandled input:`, e);
+    this.logger.info(`Unhandled input:`, e);
     /**
      * @todo add input modes based on whether the game is started.
      */
@@ -418,35 +492,6 @@ export class Game {
     }
   }
 
-  /**
-   * Countdown is how much time there is between each frame.
-   */
-  getCountdown() {
-    return this.frameRate * (11 - this.gameEngine.level);
-  }
-
-  /**
-   * 
-   * Rough description of flow chart.
-   * 
-   * countdown = countdown - delta ?
-   * countdown <= 0 ?
-   * 
-   * set countdown = 0.05 * (11 - level);
-    active pice?
-       no
-       can spawn
-          yes spawn piece
-          no   game over
-       yes
-          can fall?
-          no
-            commit piece
-            collapse board
-          yes
-            move piece down
-     bewteen coutndown you can attempt to move
-   */
   tick(time) {
     // is Game Over?
     if (this.isGameOver()) {
@@ -465,40 +510,7 @@ export class Game {
       return;
     }
 
-    if (this.lastTick === undefined) {
-      this.lastTick = time;
-    }
-
-    const delta = time - this.lastTick;
-    this.lastTick = time;
-    this.countdown = this.countdown - delta;
-    this.logger.info(
-      `cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`
-    );
-    if (this.countdown > 0) {
-      return;
-    }
-
-    if (this.countdown <= 0) {
-      this.logger.info('showing tick!');
-    }
-    this.countdown = this.getCountdown();
-
-    if (!this.gameEngine.hasActivePiece()) {
-      if (this.gameEngine.canSpawnNextPiece()) {
-        this.gameEngine.addPiece();
-        return;
-      } else {
-        this.endGame();
-        return;
-      }
-    }
-
-    if (!this.gameEngine.canFall()) {
-      this.gameEngine.commit();
-    } else {
-      this.gameEngine.movePiece(moveMap['ArrowDown']);
-    }
+    this.gameEngine.processTick(time);
   }
 
   endGame() {
@@ -524,7 +536,7 @@ export class Game {
   }
 
   isGameOver() {
-    return this.gameOver;
+    return this.gameEngine.gameOver;
   }
 
   pauseGame() {
@@ -556,15 +568,16 @@ export class Game {
       drawGameOver(this.ctx);
       return;
     }
+
     if (this.isPaused()) {
       drawPaused(this.ctx);
       return;
     }
+
     if (this.isGameStarted()) {
       this.gameEngine.drawGame(this.ctx);
     } else {
       this.drawStartScreen(this.ctx);
     }
-
   }
 }
