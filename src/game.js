@@ -23,7 +23,9 @@ import {
   drawBlock,
   drawGrid,
   fillFullScreen,
+  drawLevelSelect,
   drawTextScreen,
+  drawStartScreen,
   drawGameOver,
 } from './canvasUtils';
 // import { debounce } from './debounce';
@@ -278,37 +280,69 @@ export class Tetris {
 
 export class Game {
   constructor({ root, document }) {
-    this.logger = new Logger();
+    this.logger = new Logger(LOG_LEVELS.WARN);
     this.root = root;
     this.document = document;
     this.attachElements();
     this.frameRate = 50; //20hertz in milliseconds
     this.handleInput = this.handleInput.bind(this);
     // this.handleInput = debounce(this.handleInput, this.frameRate / 4);
-    this.startGame();
+    this.startingLevel = 1;
+    this.initGame();
   }
 
   startGame() {
-    this.gameEngine = new Tetris();
-    this.countdown = this.getCountdown();
-    this.gameOver = false;
-    this.paused = false;
     this.gameStarted = true;
     this.gameEngine.start();
   }
 
+  initGame() {
+    this.gameEngine = new Tetris({
+      startingLevel: this.startingLevel,
+    });
+    this.countdown = this.getCountdown();
+    this.gameOver = false;
+    this.paused = false;
+    this.gameStarted = false;
+  }
+
   handleInput(e) {
-    /**
-     * @todo add input modes based on whether the game is started.
-     */
-    switch (e.key) {
+    this.logger.info('handelInput', e);
+    if (this.isGameOver()) {
+      this.handleGameOverInput(e.key);
+    } else if (this.isPaused()) {
+      this.handlePausedInput(e.key);
+    } else if(this.isGameStarted()) {
+      this.handleGameInput(e.key);
+    } else if (this.isWaitingToStart()) {
+      this.handleStartInput(e.key);
+    } else {
+      this.handleFreeInput(e);
+    }
+  }
+
+  handlePausedInput(key) {
+    this.logger.info('handlePausedInput', key);
+    switch (key) {
+      case 'Escape':
+        this.isPaused() ? this.unpauseGame() : this.pauseGame();
+        break;
+
+      default:
+      this.handleFreeInput({ key });
+    }
+  }
+
+  handleGameInput(key) {
+    this.logger.info('handleGameInput', key);
+    switch (key) {
       case 'ArrowLeft':
       case 'ArrowRight':
       case 'ArrowUp':
-        this.gameEngine.movePiece(moveMap[e.key]);
+        this.gameEngine.movePiece(moveMap[key]);
         break;
       case 'ArrowDown':
-        this.gameEngine.movePiece(moveMap[e.key], true);
+        this.gameEngine.movePiece(moveMap[key], true);
         break;
       case 'z':
         // better to do generic handling.
@@ -322,8 +356,63 @@ export class Game {
         break;
       case 'Enter':
         if (this.isPaused()) this.unpauseGame();
-        if (this.isGameOver()) this.startGame();
+        if (this.isGameOver()) this.initGame();
+        if (!this.isGameStarted()) this.startGame();
         break;
+      default:
+        this.handleFreeInput({ key });
+    }
+  }
+
+  handleGameOverInput(key) {
+    this.logger.info('handle game over input', key);
+    switch (key) {
+      case 'z':
+      case 'x':
+      case 'Esc':
+      case 'Enter':
+      this.initGame();
+
+      default:
+      this.logger.info('Unhandled input to game over.', key);
+    }
+  }
+
+  handleStartInput(key) {
+     this.logger.info(`handle start input:`, key);
+    /**
+     * @todo add input modes based on whether the game is started.
+     */
+    switch (key) {
+      case 'ArrowLeft':
+      case 'ArrowRight':
+      case 'ArrowUp':
+      case 'ArrowDown':
+        this.moveLevelSelect(moveMap[key]);
+        break;
+      case 'z':
+        // better to do generic handling.
+        //this.gameEngine.tryToRotatePiece(TETRIMO_DIR.LEFT);
+        break;
+      case 'x':
+        //this.gameEngine.tryToRotatePiece(TETRIMO_DIR.RIGHT);
+        break;
+      case 'Escape':
+        break;
+      case 'Enter':
+        this.startGame();
+        break;
+      default:
+        this.logger.info(`Unhandled input:`, key);
+    }
+  }
+
+  handleFreeInput(e) {
+     this.logger.info(`Unhandled input:`, e);
+    /**
+     * @todo add input modes based on whether the game is started.
+     */
+    switch (e.key) {
       default:
         this.logger.info(`Unhandled input:`, e);
     }
@@ -365,14 +454,14 @@ export class Game {
       return;
     }
 
-    if (!this.isGameStarted()) {
-      this.logger.info('game is waiting to start!');
-      return;
-    }
-
     // is Game Paused?
     if (this.isPaused()) {
       this.logger.info('paused');
+      return;
+    }
+
+    if (!this.isGameStarted()) {
+      this.logger.info('game is waiting to start!');
       return;
     }
 
@@ -413,12 +502,21 @@ export class Game {
   }
 
   endGame() {
+    this.paused = false;
     this.gameOver = true;
     this.gameStarted = false;
   }
 
+  moveLevelSelect(dir) {
+    this.logger.info('moveSelect', dir);
+  }
+
   isGameStarted() {
     return this.gameStarted;
+  }
+
+  isWaitingToStart() {
+    return !this.isPaused() && !this.isGameStarted() && !this.isGameOver();
   }
 
   isPaused() {
@@ -445,7 +543,15 @@ export class Game {
     this.root.appendChild(canvas);
   }
 
+  drawStartScreen(ctx) {
+    drawStartScreen(ctx);
+    drawLevelSelect(ctx, this.startingLevel);
+  }
+
   renderFrame(time) {
+    this.lastFrame = time;
+    this.logger.info('Game rendering');
+
     if (this.isGameOver()) {
       drawGameOver(this.ctx);
       return;
@@ -454,9 +560,11 @@ export class Game {
       drawPaused(this.ctx);
       return;
     }
+    if (this.isGameStarted()) {
+      this.gameEngine.drawGame(this.ctx);
+    } else {
+      this.drawStartScreen(this.ctx);
+    }
 
-    this.lastFrame = time;
-    this.logger.info('Game rendering');
-    this.gameEngine.drawGame(this.ctx);
   }
 }

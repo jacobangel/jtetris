@@ -6,6 +6,7 @@ import {
   FULL_WIDTH,
 } from './game';
 
+
 export const fillFullScreen = (ctx, color) => {
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, FULL_WIDTH, FULL_HEIGHT);
@@ -16,10 +17,18 @@ export const fillScreen = (ctx, color) => {
   ctx.fillRect(0, 0, CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT);
 };
 
+export const drawLevelSelect = (ctx, levels, currentLevel) => {
+  console.log(levels, currentLevel);
+}
+
+export const drawStartScreen = (ctx) => {
+  drawTextScreen(ctx, 'Press Enter to start!');
+}
+
 export const drawTextScreen = (ctx, message) => {
   fillScreen(ctx, 'gray');
   ctx.fillStyle = 'black';
-  ctx.font = "36px 'Roboto Slab', sans-serif";
+  ctx.font = "24px 'Roboto Slab', sans-serif";
   const textCenter = ctx.measureText(message).width / 2;
   const xCenter = (CELL_SIZE * GRID_WIDTH) / 2;
   ctx.fillText(message, xCenter - textCenter, (CELL_SIZE * GRID_HEIGHT) / 2);
