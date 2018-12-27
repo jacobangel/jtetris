@@ -1,4 +1,4 @@
-import { Tetris } from '../game';
+import { Tetris } from "../tetris";
 
 describe('Tetris', () => {
   test('#getPointsAward', () => {
