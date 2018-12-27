@@ -19,13 +19,11 @@ import { Logger, LOG_LEVELS } from './logger';
 import { TETRIMO_DIR } from './tetrimo';
 import {
   drawPaused,
-  drawLevelSelect,
   drawStartScreen,
   drawGameOver,
 } from './canvasUtils';
 
 import { Tetris } from './tetris';
-import { assert } from './assert';
 
 // P <=> IG
 // IG => GO
@@ -235,11 +233,6 @@ export class Game {
     this.root.appendChild(canvas);
   }
 
-  drawStartScreen(ctx) {
-    drawStartScreen(ctx);
-    drawLevelSelect(ctx, this.startingLevel);
-  }
-
   renderFrame(time) {
     this.lastFrame = time;
     this.logger.info('Game rendering');
@@ -256,8 +249,13 @@ export class Game {
 
     if (this.isGameStarted()) {
       this.gameEngine.drawGame(this.ctx);
-    } else {
-      this.drawStartScreen(this.ctx);
+    } 
+    
+    if (this.isStartScreen()) {
+      drawStartScreen(this.ctx, { 
+        startingLevel: this.startingLevel,
+        levels: 9
+      });
     }
   }
 }

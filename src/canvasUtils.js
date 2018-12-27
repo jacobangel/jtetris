@@ -17,12 +17,13 @@ export const fillScreen = (ctx, color) => {
   ctx.fillRect(0, 0, CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT);
 };
 
-export const drawLevelSelect = (ctx, levels, currentLevel) => {
+export const drawLevelSelect = (ctx, { levels, currentLevel }) => {
   // console.log(levels, currentLevel);
 }
 
-export const drawStartScreen = (ctx) => {
+export const drawStartScreen = (ctx, props) => {
   drawTextScreen(ctx, 'Press Enter to start!');
+  drawLevelSelect(ctx, props);
 }
 
 export const drawTextScreen = (ctx, message) => {
