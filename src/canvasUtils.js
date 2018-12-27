@@ -90,3 +90,11 @@ export const drawGrid = ctx => {
   ctx.stroke();
   drawBorder(ctx);
 };
+
+export const drawDash = (ctx, { level, score, linesCleared }) => {
+  ctx.fillStyle = 'black';
+  ctx.font = "12px 'Helvetica Neue', sans-serif";
+  ctx.fillText(`Level: ${level}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE);
+  ctx.fillText(`Score: ${score}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 2);
+  ctx.fillText(`Cleared: ${linesCleared}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3);
+} 

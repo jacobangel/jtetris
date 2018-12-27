@@ -1,11 +1,11 @@
 import { Logger, LOG_LEVELS } from './logger';
 import { getRandomPiece, Block, Tetrimo, TETRIMO_DIR } from './tetrimo';
 import { Coord } from './coord';
-import { drawBlock, drawGrid, fillFullScreen } from './canvasUtils';
+import { drawDash, drawBlock, drawGrid, fillFullScreen } from './canvasUtils';
 import { GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './game';
 
 export class Tetris {
-  constructor({ startingLevel = 1, frameRate = 50 }) {
+  constructor({ startingLevel = 1, frameRate = 50, onGameOver }) {
     this.frameRate = frameRate;
     this.startingLevel = startingLevel;
     this.rowsDropped = 0;
@@ -21,6 +21,7 @@ export class Tetris {
       }
     }
     this.cells = cells;
+    this.gameOverCB = onGameOver;
     this.pieceQueue = [this.getRandomPiece()];
     this.countdown = this.getCountdown();
     this.gameOver = false;
@@ -113,6 +114,7 @@ export class Tetris {
   }
 
   endGame() {
+    this.gameOverCB(this.score);
     this.gameOver = true;
   }
 
@@ -254,30 +256,12 @@ export class Tetris {
     }
   }
 
-  drawPiece(ctx) {
+  drawPiece(ctx, piece, offset = [0, 0]) {
     // get a piece at random.
-    if (this.activePiece) {
-      const coords = this.activePiece.getCoords();
+    if (piece) {
+      const coords = piece.getCoords();
       for (let coord of coords) {
-        drawBlock(ctx, coord, this.activePiece.color);
-      }
-    }
-  }
-
-  // this should be a helper...
-  drawDash(ctx, { level, score, linesCleared }) {
-    ctx.fillStyle = 'black';
-    ctx.font = "12px 'Helvetica Neue', sans-serif";
-    ctx.fillText(`Level: ${level}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE);
-    ctx.fillText(`Score: ${score}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 2);
-    ctx.fillText(`Cleared: ${linesCleared}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3);
-  }
-
-  drawNextPiece(ctx, nextPiece) {
-    if (nextPiece) {
-      const coords = nextPiece.getCoords();
-      for (let coord of coords) {
-        drawBlock(ctx, Coord.transform(coord, [8, 2]), nextPiece.color);
+        drawBlock(ctx, Coord.transform(coord, offset), piece.color);
       }
     }
   }
@@ -294,11 +278,11 @@ export class Tetris {
     drawGrid(ctx);
     this.drawPiece(ctx, this.activePiece);
     this.drawFallen(ctx, this.cells);
-    this.drawDash(ctx, {
+    drawDash(ctx, {
       linesCleared: this.linesCleared,
       level: this.level,
       score: this.score,
     });
-    this.drawNextPiece(ctx, this.pieceQueue[0]);
+    this.drawPiece(ctx, this.pieceQueue[0], [8, 2]);
   }
 }

@@ -25,6 +25,7 @@ import {
 } from './canvasUtils';
 
 import { Tetris } from './tetris';
+import { assert } from './assert';
 
 // P <=> IG
 // IG => GO
@@ -34,7 +35,7 @@ export const GAME_STATES = {
   PAUSED: 'paused',
   GAME_OVER: 'game_over',
   STAGE_SELECT: 'stage_select',
-  IN_GAME: 'in_game',
+  ACTIVE_GAME: 'active_game',
 }
 
 export class Game {
@@ -49,29 +50,30 @@ export class Game {
   }
 
   startGame() {
-    this.gameStarted = true;
+    this.gameState = GAME_STATES.ACTIVE_GAME;
     this.gameEngine.start();
   }
 
   initGame() {
+    this.gameState = GAME_STATES.STAGE_SELECT;
     this.gameEngine = new Tetris({
       startingLevel: this.startingLevel,
       frameRate: this.frameRate,
+      onGameOver: (finalScore = 0) => {
+        this.endGame({ finalScore });
+      }
     });
-    this.gameOver = false;
-    this.paused = false;
-    this.gameStarted = false;
   }
 
   handleInput(e) {
-    this.logger.info('handelInput', e);
+    this.logger.info('handleInput', e);
     if (this.isGameOver()) {
       this.handleGameOverInput(e.key);
     } else if (this.isPaused()) {
       this.handlePausedInput(e.key);
     } else if (this.isGameStarted()) {
       this.handleGameInput(e.key);
-    } else if (this.isWaitingToStart()) {
+    } else if (this.isStartScreen()) {
       this.handleStartInput(e.key);
     } else {
       this.handleFreeInput(e);
@@ -194,9 +196,7 @@ export class Game {
   }
 
   endGame() {
-    this.paused = false;
-    this.gameOver = true;
-    this.gameStarted = false;
+    this.gameState = GAME_STATES.GAME_OVER;
   }
 
   moveLevelSelect(dir) {
@@ -204,27 +204,27 @@ export class Game {
   }
 
   isGameStarted() {
-    return this.gameStarted;
+    return this.gameState === GAME_STATES.ACTIVE_GAME; 
   }
 
-  isWaitingToStart() {
-    return !this.isPaused() && !this.isGameStarted() && !this.isGameOver();
+  isStartScreen() {
+    return this.gameState === GAME_STATES.STAGE_SELECT;
   }
 
   isPaused() {
-    return this.paused;
+    return this.gameState === GAME_STATES.PAUSED;
   }
 
   isGameOver() {
-    return this.gameEngine.gameOver;
+    return this.gameState === GAME_STATES.GAME_OVER;
   }
 
   pauseGame() {
-    this.paused = true;
+    this.gameState = GAME_STATES.PAUSED;
   }
 
   unpauseGame() {
-    this.paused = false;
+    this.gameState = GAME_STATES.ACTIVE_GAME;
   }
 
   attachElements(document) {
