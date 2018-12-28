@@ -20,21 +20,27 @@ export const drawStartScreen = (ctx, props) => {
   drawLevelSelect(ctx, props);
 }
 
-export const drawTextScreen = (ctx, message) => {
+export const drawTextScreen = (ctx, message, subtext) => {
   fillScreen(ctx, 'gray');
   ctx.fillStyle = 'black';
   ctx.font = "24px 'Roboto Slab', sans-serif";
   const textCenter = ctx.measureText(message).width / 2;
   const xCenter = (CELL_SIZE * GRID_WIDTH) / 2;
   ctx.fillText(message, xCenter - textCenter, (CELL_SIZE * GRID_HEIGHT) / 2);
+  if (subtext) {
+    ctx.font = "12px 'Roboto Slab', sans-serif";
+    const textCenter = ctx.measureText(subtext).width / 2;
+    const xCenter = (CELL_SIZE * GRID_WIDTH) / 2;
+    ctx.fillText(subtext, xCenter - textCenter, 36 + (CELL_SIZE * GRID_HEIGHT) / 2);
+  }
 };
 
 export const drawGameOver = ctx => {
-  drawTextScreen(ctx, 'GAME OVER');
+  drawTextScreen(ctx, 'GAME OVER', 'Press `F` to pay respects.');
 };
 
 export const drawPaused = ctx => {
-  drawTextScreen(ctx, 'PAUSED');
+  drawTextScreen(ctx, 'PAUSED', 'Press \'Q\' to exit.');
 };
 
 export const drawBlock = (ctx, coord, color = 'gray') => {

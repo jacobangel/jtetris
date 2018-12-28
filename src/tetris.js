@@ -83,6 +83,8 @@ export class Tetris {
     switch (key) {
       case 'z':
       case 'x':
+      case 'f':
+      case 'F':
       case 'Esc':
       case 'Enter':
         this.exitGameCB(this.score);
@@ -96,6 +98,8 @@ export class Tetris {
   handlePausedInput(key) {
     this.logger.info('handlePausedInput', key);
     switch (key) {
+      case 'Q':
+        this.exitGameCB(this.score)
       case 'Escape':
         this.isPaused() ? this.unpauseGame() : this.pauseGame();
         return true;

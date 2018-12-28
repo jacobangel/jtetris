@@ -3,6 +3,8 @@ import { TETRIMO_DIR } from './tetrimo';
 import { drawPaused, drawStartScreen, drawGameOver } from './canvasUtils';
 
 import { Tetris } from './tetris';
+import { StartScreen } from './startScreen';
+
 import {
   GAME_STATES,
   moveMap,
@@ -24,12 +26,23 @@ export class Game {
     this.gameState = GAME_STATES.STAGE_SELECT;
     this.attachElements(document);
     this.initGame();
+    this.initStartScreen();
   }
 
   startGame() {
     this.initGame();
     this.gameState = GAME_STATES.ACTIVE_GAME;
     this.gameEngine.start();
+  }
+
+  initStartScreen() {
+    this.startScreen = new StartScreen({
+      startingLevel: this.startingLevel,
+      onStartGame: ({ level }) => {
+        this.startingLevel = level;
+        this.startGame() 
+      },
+    })
   }
 
   initGame() {
@@ -57,7 +70,7 @@ export class Game {
     this.logger.info('handleInput', e);
     let didHandle = false;
     if (this.isStartScreen()) {
-      didHandle = didHandle || this.handleStartInput(e.key);
+      didHandle = didHandle || this.startScreen.handleInput(e.key);
     } else if (this.isGameRunning()) {
       didHandle = didHandle || this.gameEngine.handleInput(e.key);
     }
@@ -65,36 +78,6 @@ export class Game {
     if (!didHandle) {
       this.handleFreeInput(e);
     }
-  }
-
-
-  handleStartInput(key) {
-    this.logger.info(`handle start input:`, key);
-    /**
-     * @todo add input modes based on whether the game is started.
-     */
-    switch (key) {
-      case 'ArrowLeft':
-      case 'ArrowRight':
-      case 'ArrowUp':
-      case 'ArrowDown':
-        this.moveLevelSelect(moveMap[key]);
-        break;
-      case 'z':
-        break;
-      case 'x':
-        break;
-      case 'Escape':
-        break;
-      case 'Enter':
-        this.logger.info('Starting game');
-        this.startGame();
-        break;
-      default:
-        this.logger.info(`Unhandled input:`, key);
-        return false;
-    }
-    return true;
   }
 
   handleFreeInput(e) {
@@ -117,13 +100,8 @@ export class Game {
   
     if (this.isStartScreen()) {
       this.logger.debug('game is in start screen!');
-      // this.startScreen.processTick(time);
+      this.startScreen.processTick(time);
     }
-  }
-
-
-  moveLevelSelect(dir) {
-    this.logger.info('moveSelect', dir);
   }
 
   isStartScreen() {
@@ -152,10 +130,7 @@ export class Game {
     }
 
     if (this.isStartScreen()) {
-      drawStartScreen(this.ctx, {
-        startingLevel: this.startingLevel,
-        levels: 9,
-      });
+      this.startScreen.drawScreen(this.ctx);
     }
   }
 }
