@@ -238,12 +238,12 @@ export class Game {
     this.logger.info('Game rendering');
 
     if (this.isGameOver()) {
-      drawGameOver(this.ctx);
+      this.gameEngine.drawGameOver(this.ctx);
       return;
     }
 
     if (this.isPaused()) {
-      drawPaused(this.ctx);
+      this.gameEngine.drawPaused(this.ctx);
       return;
     }
 

@@ -1,7 +1,14 @@
 import { Logger, LOG_LEVELS } from './logger';
 import { getRandomPiece, Block, Tetrimo, TETRIMO_DIR } from './tetrimo';
 import { Coord } from './coord';
-import { drawDash, drawBlock, drawGrid, fillFullScreen } from './canvasUtils';
+import { 
+  drawDash, 
+  drawBlock, 
+  drawGrid, 
+  drawPaused,
+  drawGameOver,
+  fillFullScreen
+} from './canvasUtils';
 import { GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './game';
 
 export class Tetris {
@@ -284,5 +291,13 @@ export class Tetris {
       score: this.score,
     });
     this.drawPiece(ctx, this.pieceQueue[0], [8, 2]);
+  }
+
+  drawPaused(ctx) {
+    drawPaused(ctx);
+  }
+
+  drawGameOver(ctx) {
+    drawGameOver(ctx); 
   }
 }
