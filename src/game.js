@@ -63,6 +63,7 @@ export class Game {
     this.logger.warn(`Recording score: ${score}`);
     this.scores = [score, ...this.scores];
     this.scores.sort((a, b) => b - a);
+    // need to refactor so these don't share the same enum
     this.gameState = GAME_STATES.STAGE_SELECT;
   } 
 
