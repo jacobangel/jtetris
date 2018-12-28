@@ -1,10 +1,4 @@
-import {
-  CELL_SIZE,
-  GRID_WIDTH,
-  GRID_HEIGHT,
-  FULL_HEIGHT,
-  FULL_WIDTH,
-} from './game';
+import { CELL_SIZE, GRID_WIDTH, GRID_HEIGHT, FULL_HEIGHT, FULL_WIDTH } from "./constants";
 
 
 export const fillFullScreen = (ctx, color) => {

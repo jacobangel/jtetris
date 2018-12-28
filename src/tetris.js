@@ -9,10 +9,10 @@ import {
   drawGameOver,
   fillFullScreen
 } from './canvasUtils';
-import { GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './game';
+import { GAME_STATES, GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './constants';
 
 export class Tetris {
-  constructor({ startingLevel = 1, frameRate = 50, onGameOver }) {
+  constructor({ startingLevel = 1, frameRate = 50, onGameOver, onExitGame }) {
     this.frameRate = frameRate;
     this.startingLevel = startingLevel;
     this.rowsDropped = 0;
@@ -29,9 +29,10 @@ export class Tetris {
     }
     this.cells = cells;
     this.gameOverCB = onGameOver;
+    this.exitGameCB = onExitGame;
     this.pieceQueue = [this.getRandomPiece()];
     this.countdown = this.getCountdown();
-    this.gameOver = false;
+    this.gameState = GAME_STATES.INACTIVE_GAME;
   }
 
   get level() {
@@ -56,13 +57,86 @@ export class Tetris {
     return 10;
   }
 
-  start() { }
+  start() { 
+    this.gameState = GAME_STATES.ACTIVE_GAME;
+  }
 
   /**
    * Countdown is how much time there is between each frame.
    */
   getCountdown() {
     return this.frameRate * (11 - this.level);
+  }
+
+  handleInput(key) {
+    if (this.isPaused()) {
+      return this.handlePausedInput(key);
+    } 
+    if (this.isGameOver()) {
+      return this.handleGameOverInput(key);
+    }
+    return this.handleActiveGameInput(key);
+  }
+
+  handleGameOverInput(key) {
+    this.logger.info('handle game over input', key);
+    switch (key) {
+      case 'z':
+      case 'x':
+      case 'Esc':
+      case 'Enter':
+        this.exitGameCB(this.score);
+
+      default:
+        this.logger.info('Unhandled input to game over.', key);
+    }
+  }
+
+ 
+  handlePausedInput(key) {
+    this.logger.info('handlePausedInput', key);
+    switch (key) {
+      case 'Escape':
+        this.isPaused() ? this.unpauseGame() : this.pauseGame();
+        return true;
+
+      default:
+        return false;
+    }
+
+    return false;
+  }
+
+  handleActiveGameInput(key) {
+    this.logger.info('handleGameInput', key);
+    switch (key) {
+      case 'ArrowLeft':
+      case 'ArrowRight':
+      case 'ArrowUp':
+        this.movePiece(moveMap[key]);
+        break;
+      case 'ArrowDown':
+        this.movePiece(moveMap[key], true);
+        break;
+      case 'z':
+        // better to do generic handling.
+        this.tryToRotatePiece(TETRIMO_DIR.LEFT);
+        break;
+      case 'x':
+        this.tryToRotatePiece(TETRIMO_DIR.RIGHT);
+        break;
+      case 'Escape':
+        this.pauseGame();
+        break;
+      case 'Enter':
+        if (this.isPaused()) this.unpauseGame();
+        if (this.isGameOver()) this.initGame();
+        if (!this.isGameActive()) this.start();
+        break;
+      default:
+        return false;
+    }
+    return true;
   }
 
   /**
@@ -88,6 +162,9 @@ export class Tetris {
      bewteen coutndown you can attempt to move
    */
   processTick(time) {
+    if (this.isPaused() || this.isGameOver()) {
+      return;
+    }
     if (this.lastTick === undefined) {
       this.lastTick = time;
     }
@@ -106,23 +183,21 @@ export class Tetris {
       if (this.canSpawnNextPiece()) {
         this.addPiece();
         return;
-      }
-      else {
+      } else {
         this.endGame();
         return false;
       }
     }
     if (this.canFall()) {
       this.movePiece(moveMap['ArrowDown']);
-    }
-    else {
+    } else {
       this.commit();
     }
   }
 
   endGame() {
     this.gameOverCB(this.score);
-    this.gameOver = true;
+    this.gameState = GAME_STATES.GAME_OVER;
   }
 
   getRandomPiece() {
@@ -300,4 +375,39 @@ export class Tetris {
   drawGameOver(ctx) {
     drawGameOver(ctx); 
   }
+
+  drawScreen(ctx) {
+    if (this.isGameOver()) {
+      this.drawGameOver(ctx);
+      return;
+    }
+
+    if (this.isPaused()) {
+      this.drawPaused(ctx);
+      return;
+    }
+
+    this.drawGame(ctx);
+  }
+
+  isGameActive() {
+    return this.gameState === GAME_STATES.ACTIVE_GAME;
+  }
+
+  isPaused() {
+    return this.gameState === GAME_STATES.PAUSED;
+  }
+
+  isGameOver() {
+    return this.gameState === GAME_STATES.GAME_OVER;
+  }
+
+  pauseGame() {
+    this.gameState = GAME_STATES.PAUSED;
+  }
+
+  unpauseGame() {
+    this.gameState = GAME_STATES.ACTIVE_GAME;
+  }
+
 }
