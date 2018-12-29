@@ -1,36 +1,14 @@
-// attach game loop
-// handle controls
-// mount game board
-import { Logger, LOG_LEVELS } from './logger';
 import { Game } from './game';
 import { FULL_HEIGHT, FULL_WIDTH } from './constants';
+import { LOG_LEVELS } from './logger';
 
-let shouldRender = true;
-let game = new Game({
+const game = new Game({
   root: document.querySelector('#root'),
+  window,
   document,
   height: FULL_HEIGHT, 
   width: FULL_WIDTH,
-});
-const globalLogger = new Logger(LOG_LEVELS.WARN);
-const setShouldRender = val => (shouldRender = val);
-
-const renderLoop = () => {
-  if (shouldRender) {
-    globalLogger.trace('animating!');
-    game.renderFrame();
-    game.tick(Date.now());
-  }
-  window.requestAnimationFrame(renderLoop);
-};
-
-window.addEventListener('keydown', e => {
-  globalLogger.trace(e.key, e.keyCode, e.code);
-  game.handleInput(e);
+  logLevel: LOG_LEVELS.INFO,
 });
 
-const init = () => {
-  renderLoop();
-};
-
-init();
+game.init();
