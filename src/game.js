@@ -34,6 +34,9 @@ export class Game {
   initStartScreen() {
     this.startScreen = new StartScreen({
       startingLevel: this.startingLevel,
+      onNewLevelChosen: ({ level }) => {
+        this.startingLevel = level;
+      },
       onStartGame: ({ level }) => {
         this.startingLevel = level;
         this.startGame() 

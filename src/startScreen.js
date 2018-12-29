@@ -1,24 +1,63 @@
 import { drawStartScreen } from "./canvasUtils";
+import { drawLevelSelect } from "./startScreenComponents";
 import { LOG_LEVELS, Logger } from './logger';
 
+const moveMap = {
+  'ArrowLeft': 'left',
+  'ArrowRight': 'right',
+  'ArrowUp': 'up',
+  'ArrowDown': 'down',
+}
 export class StartScreen {
-  constructor({ onStartGame, startingLevel }) {
+  constructor({ onStartGame, startingLevel, 
+    totalLevels, onNewLevelChosen }) {
+
     this.startGameCB = onStartGame;
     
     this.logger = new Logger(LOG_LEVELS.INFO);
     this.level = startingLevel || 1;
+    this.totalLevels = totalLevels || 10;
+    this.onNewLevelChosenCb = onNewLevelChosen;
   }
 
   processTick(time) {
     this.logger.debug(`Processing an animation tick`);
+    if (this.lastTime === undefined) {
+      this.lastTime = time; 
+    }
+    if (time - this.lastTime > 250) {
+      this.blink = !this.blink;
+      this.lastTime = time;
+    }
   }
 
   moveLevelSelect(dir) {
-    this.logger.info(`move level select dir: ${dir}`);
+    let level = this.level;
+    const totalLevels = this.totalLevels;
+    if (dir === 'right') {
+      level++;
+    } else if (dir === 'left') {
+      level--;
+    } else if (dir === 'up') {
+      level -= 5; 
+    } else {
+      level += 5;
+    }
+    if (level === -1) {
+      level = totalLevels - 1;
+    } else {
+      level = Math.abs(level) % totalLevels;
+    }
+    this.handleNewLevelChosen(level);
+  }
+
+  handleNewLevelChosen(level) {
+    this.level = level;
+    this.onNewLevelChosenCb({ level });
   }
  
   handleInput(key) {
-    this.logger.info(`handle start input: '${key}'`);
+    this.logger.debug(`handle start input: '${key}'`);
     /**
      * @todo add input modes based on whether the game is started.
      */
@@ -47,5 +86,6 @@ export class StartScreen {
 
   drawScreen(ctx, props) {
     drawStartScreen(ctx, { startingLevel: this.level });
+    drawLevelSelect(ctx, { levels: 9, currentLevel: this.level, blinking: this.blink })
   }
 }

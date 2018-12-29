@@ -1,4 +1,6 @@
-import { CELL_SIZE, GRID_WIDTH, GRID_HEIGHT, FULL_HEIGHT, FULL_WIDTH } from "./constants";
+import { 
+  CELL_SIZE, GRID_WIDTH, GRID_HEIGHT, 
+  FULL_HEIGHT, FULL_WIDTH } from "./constants";
 
 
 export const fillFullScreen = (ctx, color) => {
@@ -11,13 +13,18 @@ export const fillScreen = (ctx, color) => {
   ctx.fillRect(0, 0, CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT);
 };
 
-export const drawLevelSelect = (ctx, { levels, currentLevel }) => {
-  // console.log(levels, currentLevel);
+export const drawText = (ctx, msg, x, y, w, h, bold) => {
+  ctx.font = "12px 'Roboto Slab', sans-serif";
+  if (bold) {
+    ctx.font = "bold 12px 'Roboto Slab', sans-serif";
+  }
+  ctx.fillStyle = 'black';
+  const textXCenter = ctx.measureText(msg).width / 2;
+  ctx.fillText(msg, x + w / 2 - textXCenter, y + h / 2 + 4);
 }
 
 export const drawStartScreen = (ctx, props) => {
   drawTextScreen(ctx, 'Press Enter to start!');
-  drawLevelSelect(ctx, props);
 }
 
 export const drawTextScreen = (ctx, message, subtext) => {
