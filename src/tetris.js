@@ -9,7 +9,8 @@ import {
   drawGameOver,
   fillFullScreen
 } from './canvasUtils';
-import { GAME_STATES, GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './constants';
+
+import {TETRIS_STATES, GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './constants';
 
 export class Tetris {
   constructor({ startingLevel = 1, frameRate = 50, onGameOver, onExitGame }) {
@@ -32,7 +33,7 @@ export class Tetris {
     this.exitGameCB = onExitGame;
     this.pieceQueue = [this.getRandomPiece()];
     this.countdown = this.getCountdown();
-    this.gameState = GAME_STATES.INACTIVE_GAME;
+    this.gameState = TETRIS_STATES.INACTIVE_GAME;
   }
 
   get level() {
@@ -58,7 +59,7 @@ export class Tetris {
   }
 
   start() { 
-    this.gameState = GAME_STATES.ACTIVE_GAME;
+    this.gameState = TETRIS_STATES.ACTIVE_GAME;
   }
 
   /**
@@ -201,7 +202,7 @@ export class Tetris {
 
   endGame() {
     this.gameOverCB(this.score);
-    this.gameState = GAME_STATES.GAME_OVER;
+    this.gameState = TETRIS_STATES.GAME_OVER;
   }
 
   getRandomPiece() {
@@ -395,23 +396,23 @@ export class Tetris {
   }
 
   isGameActive() {
-    return this.gameState === GAME_STATES.ACTIVE_GAME;
+    return this.gameState === TETRIS_STATES.ACTIVE_GAME;
   }
 
   isPaused() {
-    return this.gameState === GAME_STATES.PAUSED;
+    return this.gameState === TETRIS_STATES.PAUSED;
   }
 
   isGameOver() {
-    return this.gameState === GAME_STATES.GAME_OVER;
+    return this.gameState === TETRIS_STATES.GAME_OVER;
   }
 
   pauseGame() {
-    this.gameState = GAME_STATES.PAUSED;
+    this.gameState = TETRIS_STATES.PAUSED;
   }
 
   unpauseGame() {
-    this.gameState = GAME_STATES.ACTIVE_GAME;
+    this.gameState = TETRIS_STATES.ACTIVE_GAME;
   }
 
 }

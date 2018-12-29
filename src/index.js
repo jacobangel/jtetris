@@ -3,11 +3,14 @@
 // mount game board
 import { Logger, LOG_LEVELS } from './logger';
 import { Game } from './game';
+import { FULL_HEIGHT, FULL_WIDTH } from './constants';
 
 let shouldRender = true;
 let game = new Game({
   root: document.querySelector('#root'),
   document,
+  height: FULL_HEIGHT, 
+  width: FULL_WIDTH,
 });
 const globalLogger = new Logger(LOG_LEVELS.WARN);
 const setShouldRender = val => (shouldRender = val);

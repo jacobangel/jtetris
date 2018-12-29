@@ -18,9 +18,15 @@ export const moveMap = {
 // IG => GO
 // GO => SS
 // SS => IG
-export const GAME_STATES = {
+
+export const TETRIS_STATES = {
   PAUSED: 'paused',
   GAME_OVER: 'game_over',
+  ACTIVE_GAME: 'active_game',
+  INACTIVE_GAME: 'inactive_game',
+}
+
+export const GAME_STATES = {
   STAGE_SELECT: 'stage_select',
   ACTIVE_GAME: 'active_game',
 };

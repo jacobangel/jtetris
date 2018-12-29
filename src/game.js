@@ -1,22 +1,11 @@
 import { Logger, LOG_LEVELS } from './logger';
-import { TETRIMO_DIR } from './tetrimo';
-import { drawPaused, drawStartScreen, drawGameOver } from './canvasUtils';
-
 import { Tetris } from './tetris';
 import { StartScreen } from './startScreen';
 
-import {
-  GAME_STATES,
-  moveMap,
-  GRID_HEIGHT,
-  CELL_SIZE,
-  DASHBOARD_HEIGHT,
-  GRID_WIDTH,
-  SIDEBAR_WIDTH,
-} from './constants';
+import { GAME_STATES } from './constants';
 
 export class Game {
-  constructor({ root, document }) {
+  constructor({ root, document, height, width }) {
     this.logger = new Logger(LOG_LEVELS.WARn);
     this.root = root;
     this.frameRate = 50; //20hertz in milliseconds
@@ -24,7 +13,7 @@ export class Game {
     this.startingLevel = 1;
     this.scores = [];
     this.gameState = GAME_STATES.STAGE_SELECT;
-    this.attachElements(document);
+    this.attachElements(document, width, height);
     this.initGame();
     this.initStartScreen();
   }
@@ -113,10 +102,10 @@ export class Game {
     return this.gameState !== GAME_STATES.STAGE_SELECT;
   }
 
-  attachElements(document) {
+  attachElements(document, width, height) {
     const canvas = document.createElement('canvas');
-    canvas.height = GRID_HEIGHT * CELL_SIZE + DASHBOARD_HEIGHT;
-    canvas.width = GRID_WIDTH * CELL_SIZE + SIDEBAR_WIDTH;
+    canvas.height = height;
+    canvas.width = width;
     this.ctx = canvas.getContext('2d');
     this.root.appendChild(canvas);
   }
