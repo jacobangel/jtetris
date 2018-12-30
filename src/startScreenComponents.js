@@ -1,5 +1,5 @@
 import { CELL_SIZE, BOARD_HEIGHT, BOARD_WIDTH } from "./constants";
-import { drawText } from "./canvasUtils";
+import { fillScreen, drawText } from "./canvasUtils";
 export const drawLevelSelect = (ctx, { blinking, levels, currentLevel }) => {
   //console.log(levels, currentLevel);
   // draw boxes with current levles
@@ -42,5 +42,19 @@ export const drawLevelSelect = (ctx, { blinking, levels, currentLevel }) => {
 };
 
 export const drawHighScores = (ctx, { scores }) => {
-  console.log('drawing high scores', scores);
+  const rows = scores.length + 1;
+  const scoreWidth = BOARD_WIDTH / 2; 
+  const scoreHeight = CELL_SIZE * rows + rows;
+  const startX = BOARD_WIDTH / 2 - scoreWidth / 2;
+  const startY = BOARD_HEIGHT * .25;
+  ctx.fillStyle = 'gray';
+  ctx.fillRect(startX, startY, scoreWidth, scoreHeight);
+  ctx.lineWidth = 1.0;
+  drawText(ctx, 'High Scores!', startX, startY - CELL_SIZE, scoreWidth, true, true);
+  scores.forEach((result, i)=> {
+    const { name, score } = result;
+    drawText(ctx, `${name} - - - ${score}`, startX, 
+      startY + ((i) * CELL_SIZE)
+    );
+  });
 }

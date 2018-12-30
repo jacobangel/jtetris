@@ -1,5 +1,5 @@
 import { drawStartScreen } from "./canvasUtils";
-import { drawLevelSelect } from "./startScreenComponents";
+import { drawLevelSelect, drawHighScores } from "./startScreenComponents";
 import { LOG_LEVELS, Logger } from './logger';
 
 const moveMap = {
@@ -8,16 +8,28 @@ const moveMap = {
   'ArrowUp': 'up',
   'ArrowDown': 'down',
 }
+
+const defaultScores = [
+  { name: 'AAA', score: 9999 },
+  { name: 'BBB', score: 8888 },
+  { name: 'CCC', score: 7777 },
+];
+
 export class StartScreen {
   constructor({ onStartGame, startingLevel, 
-    totalLevels, onNewLevelChosen }) {
+    totalLevels, onNewLevelChosen, scores }) {
 
     this.startGameCB = onStartGame;
-    
+    this.scores = scores && scores.length ? scores : defaultScores;
     this.logger = new Logger(LOG_LEVELS.INFO);
     this.level = startingLevel || 1;
     this.totalLevels = totalLevels || 10;
     this.onNewLevelChosenCb = onNewLevelChosen;
+  }
+
+  setScores(scores) {
+    // yes this is dumb.
+    this.scores = scores;
   }
 
   processTick(time) {
@@ -87,5 +99,8 @@ export class StartScreen {
   drawScreen(ctx, props) {
     drawStartScreen(ctx, { startingLevel: this.level });
     drawLevelSelect(ctx, { levels: 9, currentLevel: this.level, blinking: this.blink })
+    drawHighScores(ctx, {
+      scores: this.scores,
+    });
   }
 }

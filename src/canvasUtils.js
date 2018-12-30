@@ -19,8 +19,15 @@ export const drawText = (ctx, msg, x, y, w, h, bold) => {
     ctx.font = "bold 12px 'Roboto Slab', sans-serif";
   }
   ctx.fillStyle = 'black';
-  const textXCenter = ctx.measureText(msg).width / 2;
-  ctx.fillText(msg, x + w / 2 - textXCenter, y + h / 2 + 4);
+  if (w && h) {
+    const textXCenter = ctx.measureText(msg).width / 2;
+    ctx.fillText(msg, x + w / 2 - textXCenter, y + h / 2 + 4);
+  } else if (w) {
+    const textXCenter = ctx.measureText(msg).width / 2;
+    ctx.fillText(msg, x + w / 2 - textXCenter, y);
+  } else {
+    ctx.fillText(msg, x, y);
+  }
 }
 
 export const drawStartScreen = (ctx, props) => {

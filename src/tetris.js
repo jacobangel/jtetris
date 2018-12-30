@@ -10,14 +10,14 @@ import {
   fillFullScreen
 } from './canvasUtils';
 
-import {TETRIS_STATES, GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './constants';
+import { TETRIS_STATES, GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './constants';
 
 export class Tetris {
   constructor({ startingLevel = 1, frameRate = 50, onGameOver, onExitGame }) {
     this.frameRate = frameRate;
     this.startingLevel = startingLevel;
     this.rowsDropped = 0;
-    this.score = 0;
+    this.score = 10000;
     this.linesCleared = 0;
     // @todo add a count of "seen" pieces
     const cells = [];

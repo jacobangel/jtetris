@@ -11,7 +11,11 @@ export class Game {
     this.frameRate = 50; //20hertz in milliseconds
     this.handleInput = this.handleInput.bind(this);
     this.startingLevel = 1;
-    this.scores = [];
+    this.scores = [
+      { name: 'AAA', score: 9999 },
+      { name: 'BBB', score: 8888 },
+      { name: 'CCC', score: 7777 },
+    ];
     this.gameState = GAME_STATES.STAGE_SELECT;
     this.window = window;
     this.attachElements(document, width, height);
@@ -33,8 +37,9 @@ export class Game {
 
   initStartScreen() {
     this.startScreen = new StartScreen({
+      scores: this.scores,
       startingLevel: this.startingLevel,
-      onNewLevelChosen: ({ level }) => {
+      onNewLevelChosen: ({ level }) => { 
         this.startingLevel = level;
       },
       onStartGame: ({ level }) => {
@@ -58,11 +63,15 @@ export class Game {
   }
 
   exitGame(props) {
-    const score = props.finalScore;
+    const score = { 
+      name: 'P1',
+      score: props.finalScore
+    };
     this.logger.info(`Recording score: ${score}`);
     this.scores = [score, ...this.scores];
-    this.scores.sort((a, b) => b - a);
-    // need to refactor so these don't share the same enum
+    this.scores.sort((a, b) => b.score - a.score);
+    this.scores = this.scores.slice(0, 3);
+    this.startScreen.setScores(this.scores);
     this.gameState = GAME_STATES.STAGE_SELECT;
   } 
 
