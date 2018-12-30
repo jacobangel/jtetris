@@ -1,4 +1,4 @@
-import { Logger, LOG_LEVELS } from './logger';
+import { Logger } from './logger';
 import { Tetris } from './tetris';
 import { StartScreen } from './startScreen';
 
@@ -39,33 +39,35 @@ export class Game {
     this.startScreen = new StartScreen({
       scores: this.scores,
       startingLevel: this.startingLevel,
-      onNewLevelChosen: ({ level }) => { 
+      onNewLevelChosen: ({ level }) => {
         this.startingLevel = level;
       },
       onStartGame: ({ level }) => {
         this.startingLevel = level;
-        this.startGame() 
+        this.startGame();
       },
-    })
+    });
   }
 
   initTetris() {
     this.gameEngine = new Tetris({
       startingLevel: this.startingLevel,
       frameRate: this.frameRate,
-      onGameOver: (finalScore = 0) => {
-        this.logger.info('This callback does not do anything.');
+      onGameOver: () => {
+        this.logger.info(
+          'This callback does not do anything, but happens when the game ends.'
+        );
       },
       onExitGame: (finalScore = 0) => {
         this.exitGame({ finalScore });
-      }
+      },
     });
   }
 
   exitGame(props) {
-    const score = { 
+    const score = {
       name: 'P1',
-      score: props.finalScore
+      score: props.finalScore,
     };
     this.logger.info(`Recording score: ${score}`);
     this.scores = [score, ...this.scores];
@@ -73,7 +75,7 @@ export class Game {
     this.scores = this.scores.slice(0, 3);
     this.startScreen.setScores(this.scores);
     this.gameState = GAME_STATES.STAGE_SELECT;
-  } 
+  }
 
   handleInput(e) {
     this.logger.debug('handleInput', e);
@@ -90,13 +92,13 @@ export class Game {
   }
 
   handleFreeInput(e) {
-    this.logger.info(`Unhandled input:`, e);
+    this.logger.info('Unhandled input:', e);
     /**
      * @todo add input modes based on whether the game is started.
      */
     switch (e.key) {
-      default:
-        this.logger.info(`Unhandled input:`, e);
+    default:
+      this.logger.info('Unhandled input:', e);
     }
   }
 
@@ -104,7 +106,7 @@ export class Game {
     this.logger.trace('animating!');
     this.renderFrame();
     this.tick(Date.now());
-    this.window.requestAnimationFrame(this.renderLoop);   
+    this.window.requestAnimationFrame(this.renderLoop);
   }
 
   tick(time) {
@@ -113,7 +115,7 @@ export class Game {
       this.logger.debug('game is running!');
       this.gameEngine.processTick(time);
     }
-  
+
     if (this.isStartScreen()) {
       this.logger.debug('game is in start screen!');
       this.startScreen.processTick(time);
@@ -143,7 +145,6 @@ export class Game {
     });
   }
 
-
   renderFrame(time) {
     this.lastFrame = time;
     this.logger.debug('Game rendering');
@@ -153,7 +154,9 @@ export class Game {
     }
 
     if (this.isStartScreen()) {
-      this.startScreen.drawScreen(this.ctx);
+      this.startScreen.drawScreen(this.ctx, {
+        scores: this.scores,
+      });
     }
   }
 }

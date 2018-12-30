@@ -1,23 +1,23 @@
 import { Logger, LOG_LEVELS } from './logger';
 import { getRandomPiece, Block, Tetrimo, TETRIMO_DIR } from './tetrimo';
 import { Coord } from './coord';
-import { 
-  drawDash, 
-  drawBlock, 
-  drawGrid, 
+import {
+  drawDash,
+  drawBlock,
+  drawGrid,
   drawPaused,
   drawGameOver,
-  fillFullScreen
+  fillFullScreen,
 } from './canvasUtils';
 
-import { TETRIS_STATES, GRID_HEIGHT, GRID_WIDTH, moveMap, CELL_SIZE } from './constants';
+import { TETRIS_STATES, GRID_HEIGHT, GRID_WIDTH, moveMap } from './constants';
 
 export class Tetris {
   constructor({ startingLevel = 1, frameRate = 50, onGameOver, onExitGame }) {
     this.frameRate = frameRate;
     this.startingLevel = startingLevel;
     this.rowsDropped = 0;
-    this.score = 10000;
+    this.score = 0;
     this.linesCleared = 0;
     // @todo add a count of "seen" pieces
     const cells = [];
@@ -51,14 +51,13 @@ export class Tetris {
   static computeEarnedLevel(linesCleared) {
     if (linesCleared <= 0) {
       return 1;
-    }
-    else if (linesCleared > 0 && linesCleared <= 90) {
+    } else if (linesCleared > 0 && linesCleared <= 90) {
       return 1 + Math.floor((linesCleared - 1) / 10);
     }
     return 10;
   }
 
-  start() { 
+  start() {
     this.gameState = TETRIS_STATES.ACTIVE_GAME;
   }
 
@@ -72,7 +71,7 @@ export class Tetris {
   handleInput(key) {
     if (this.isPaused()) {
       return this.handlePausedInput(key);
-    } 
+    }
     if (this.isGameOver()) {
       return this.handleGameOverInput(key);
     }
@@ -82,64 +81,64 @@ export class Tetris {
   handleGameOverInput(key) {
     this.logger.info('handle game over input', key);
     switch (key) {
-      case 'z':
-      case 'x':
-      case 'f':
-      case 'F':
-      case 'Esc':
-      case 'Enter':
-        this.exitGameCB(this.score);
+    case 'z':
+    case 'x':
+    case 'f':
+    case 'F':
+    case 'Esc':
+    case 'Enter':
+      this.exitGameCB(this.score);
+      return true;
 
-      default:
-        this.logger.info('Unhandled input to game over.', key);
+    default:
+      this.logger.info('Unhandled input to game over.', key);
+      return false;
     }
   }
 
- 
   handlePausedInput(key) {
     this.logger.info('handlePausedInput', key);
     switch (key) {
-      case 'Q':
-        this.exitGameCB(this.score)
-      case 'Escape':
-        this.isPaused() ? this.unpauseGame() : this.pauseGame();
-        return true;
+    case 'Q':
+      this.exitGameCB(this.score);
+      return true;
+    case 'Escape':
+      this.isPaused() ? this.unpauseGame() : this.pauseGame();
+      return true;
 
-      default:
-        return false;
+    default:
+      return false;
     }
-
-    return false;
   }
 
   handleActiveGameInput(key) {
     this.logger.info('handleGameInput', key);
     switch (key) {
-      case 'ArrowLeft':
-      case 'ArrowRight':
-      case 'ArrowUp':
-        this.movePiece(moveMap[key]);
-        break;
-      case 'ArrowDown':
-        this.movePiece(moveMap[key], true);
-        break;
-      case 'z':
-        // better to do generic handling.
-        this.tryToRotatePiece(TETRIMO_DIR.LEFT);
-        break;
-      case 'x':
-        this.tryToRotatePiece(TETRIMO_DIR.RIGHT);
-        break;
-      case 'Escape':
-        this.pauseGame();
-        break;
-      case 'Enter':
-        if (this.isPaused()) this.unpauseGame();
-        if (this.isGameOver()) this.initGame();
-        if (!this.isGameActive()) this.start();
-        break;
-      default:
-        return false;
+    case 'ArrowLeft':
+    case 'ArrowRight':
+    case 'ArrowUp':
+      this.movePiece(moveMap[key]);
+      break;
+    case 'ArrowDown':
+      this.movePiece(moveMap[key], true);
+      break;
+    case 'z':
+      // better to do generic handling.
+      this.tryToRotatePiece(TETRIMO_DIR.LEFT);
+      break;
+    case 'x':
+      this.tryToRotatePiece(TETRIMO_DIR.RIGHT);
+      break;
+    case 'Escape':
+      this.pauseGame();
+      break;
+    case 'Enter':
+      if (this.isPaused()) this.unpauseGame();
+      if (this.isGameOver()) this.initGame();
+      if (!this.isGameActive()) this.start();
+      break;
+    default:
+      return false;
     }
     return true;
   }
@@ -176,7 +175,9 @@ export class Tetris {
     const delta = time - this.lastTick;
     this.lastTick = time;
     this.countdown = this.countdown - delta;
-    this.logger.info(`cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`);
+    this.logger.info(
+      `cd ${this.countdown}, tickTime: ${time}, delta: ${delta}`
+    );
     if (this.countdown > 0) {
       return;
     }
@@ -213,7 +214,9 @@ export class Tetris {
 
   canSpawnNextPiece() {
     const piece = this.pieceQueue[0];
-    return (!this.hasCollision(piece) && piece.getCoords().some(coord => coord.y > -1));
+    return (
+      !this.hasCollision(piece) && piece.getCoords().some(coord => coord.y > -1)
+    );
   }
 
   addPiece() {
@@ -247,10 +250,11 @@ export class Tetris {
       return;
     }
     if (!this.canRotate(this.activePiece, dir)) {
-      this.activePiece.rotate(dir === TETRIMO_DIR.LEFT ? TETRIMO_DIR.RIGHT : TETRIMO_DIR.LEFT);
+      this.activePiece.rotate(
+        dir === TETRIMO_DIR.LEFT ? TETRIMO_DIR.RIGHT : TETRIMO_DIR.LEFT
+      );
       this.logger.info('Could not rotate piece, undoing the rotation.');
-    }
-    else {
+    } else {
       this.logger.info('Rotation was accepted.');
     }
   }
@@ -273,8 +277,7 @@ export class Tetris {
   }
 
   canMove(move) {
-    if (!this.activePiece)
-      return false;
+    if (!this.activePiece) return false;
     const proposedMove = this.activePiece.getCoords().map(point => {
       return Coord.transform(point, move);
     });
@@ -307,11 +310,14 @@ export class Tetris {
 
   commit() {
     if (!this.activePiece) {
-      throw new Error("Cannot commit a piece that doesn't exist");
+      throw new Error('Cannot commit a piece that doesn\'t exist');
     }
     const coords = this.activePiece.getCoords();
     for (let coord of coords) {
-      this.cells[coord.y][coord.x] = new Block(new Coord(coord.x, coord.y), this.activePiece.color);
+      this.cells[coord.y][coord.x] = new Block(
+        new Coord(coord.x, coord.y),
+        this.activePiece.color
+      );
     }
     // we need to count how many are collapsed for points!
     let removed = 0;
@@ -378,7 +384,7 @@ export class Tetris {
   }
 
   drawGameOver(ctx) {
-    drawGameOver(ctx); 
+    drawGameOver(ctx);
   }
 
   drawScreen(ctx) {
@@ -414,5 +420,4 @@ export class Tetris {
   unpauseGame() {
     this.gameState = TETRIS_STATES.ACTIVE_GAME;
   }
-
 }

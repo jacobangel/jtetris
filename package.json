@@ -6,6 +6,7 @@
   "scripts": {
     "start": "webpack-dev-server",
     "build": "webpack",
+    "gussy": "prettier --write ./src/*.js && eslint --fix ./src/*",
     "test": "jest"
   },
   "keywords": [],
@@ -23,6 +24,7 @@
     "@babel/preset-typescript": "^7.1.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
+    "eslint": "^5.11.1",
     "jest": "^23.6.0",
     "prettier": "^1.15.3",
     "regenerator-runtime": "^0.13.1",

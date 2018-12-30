@@ -6,7 +6,7 @@ const game = new Game({
   root: document.querySelector('#root'),
   window,
   document,
-  height: FULL_HEIGHT, 
+  height: FULL_HEIGHT,
   width: FULL_WIDTH,
   logLevel: LOG_LEVELS.INFO,
 });

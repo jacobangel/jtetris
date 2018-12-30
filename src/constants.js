@@ -24,7 +24,7 @@ export const TETRIS_STATES = {
   GAME_OVER: 'game_over',
   ACTIVE_GAME: 'active_game',
   INACTIVE_GAME: 'inactive_game',
-}
+};
 
 export const GAME_STATES = {
   STAGE_SELECT: 'stage_select',

@@ -1,16 +1,16 @@
-import { CELL_SIZE, BOARD_HEIGHT, BOARD_WIDTH } from "./constants";
-import { fillScreen, drawText } from "./canvasUtils";
+import { CELL_SIZE, BOARD_HEIGHT, BOARD_WIDTH } from './constants';
+import { drawText } from './canvasUtils';
 export const drawLevelSelect = (ctx, { blinking, levels, currentLevel }) => {
   //console.log(levels, currentLevel);
   // draw boxes with current levles
   // draw numbers inside
-  // make the active one blink i guess? 
+  // make the active one blink i guess?
   const rows = 2;
   const cols = (levels + 1) / rows;
   const selectWidth = CELL_SIZE * cols + cols;
   const selectHeight = CELL_SIZE * rows + rows;
   const startX = BOARD_WIDTH / 2 - selectWidth / 2;
-  const startY = BOARD_HEIGHT * .65;
+  const startY = BOARD_HEIGHT * 0.65;
   ctx.fillStyle = 'gray';
   ctx.fillRect(startX, startY, selectWidth, selectHeight);
   ctx.lineWidth = 1.0;
@@ -32,29 +32,42 @@ export const drawLevelSelect = (ctx, { blinking, levels, currentLevel }) => {
     const y = startY + row * CELL_SIZE;
     if (i === currentLevel && blinking) {
       drawText(ctx, i, x, y, CELL_SIZE, CELL_SIZE, i === currentLevel);
-    }
-    else if (i !== currentLevel) {
+    } else if (i !== currentLevel) {
       drawText(ctx, i, x, y, CELL_SIZE, CELL_SIZE, i === currentLevel);
     }
   }
   ctx.stroke();
-  drawText(ctx, 'Choose Your Level', startX, startY - CELL_SIZE, selectWidth, CELL_SIZE, true);
+  drawText(
+    ctx,
+    'Choose Your Level',
+    startX,
+    startY - CELL_SIZE,
+    selectWidth,
+    CELL_SIZE,
+    true
+  );
 };
 
 export const drawHighScores = (ctx, { scores }) => {
   const rows = scores.length + 1;
-  const scoreWidth = BOARD_WIDTH / 2; 
+  const scoreWidth = BOARD_WIDTH / 2;
   const scoreHeight = CELL_SIZE * rows + rows;
   const startX = BOARD_WIDTH / 2 - scoreWidth / 2;
-  const startY = BOARD_HEIGHT * .25;
+  const startY = BOARD_HEIGHT * 0.25;
   ctx.fillStyle = 'gray';
   ctx.fillRect(startX, startY, scoreWidth, scoreHeight);
   ctx.lineWidth = 1.0;
-  drawText(ctx, 'High Scores!', startX, startY - CELL_SIZE, scoreWidth, true, true);
-  scores.forEach((result, i)=> {
+  drawText(
+    ctx,
+    'High Scores!',
+    startX,
+    startY - CELL_SIZE,
+    scoreWidth,
+    true,
+    true
+  );
+  scores.forEach((result, i) => {
     const { name, score } = result;
-    drawText(ctx, `${name} - - - ${score}`, startX, 
-      startY + ((i) * CELL_SIZE)
-    );
+    drawText(ctx, `${name} - - - ${score}`, startX, startY + i * CELL_SIZE);
   });
-}
+};

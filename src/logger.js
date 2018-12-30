@@ -1,3 +1,5 @@
+/* eslint no-console: "off" */
+
 export const LOG_LEVELS = {
   TRACE: 0,
   DEBUG: 1,

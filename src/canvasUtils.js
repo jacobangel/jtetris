@@ -1,7 +1,10 @@
-import { 
-  CELL_SIZE, GRID_WIDTH, GRID_HEIGHT, 
-  FULL_HEIGHT, FULL_WIDTH } from "./constants";
-
+import {
+  CELL_SIZE,
+  GRID_WIDTH,
+  GRID_HEIGHT,
+  FULL_HEIGHT,
+  FULL_WIDTH,
+} from './constants';
 
 export const fillFullScreen = (ctx, color) => {
   ctx.fillStyle = color;
@@ -14,9 +17,9 @@ export const fillScreen = (ctx, color) => {
 };
 
 export const drawText = (ctx, msg, x, y, w, h, bold) => {
-  ctx.font = "12px 'Roboto Slab', sans-serif";
+  ctx.font = '12px \'Roboto Slab\', sans-serif';
   if (bold) {
-    ctx.font = "bold 12px 'Roboto Slab', sans-serif";
+    ctx.font = 'bold 12px \'Roboto Slab\', sans-serif';
   }
   ctx.fillStyle = 'black';
   if (w && h) {
@@ -28,24 +31,28 @@ export const drawText = (ctx, msg, x, y, w, h, bold) => {
   } else {
     ctx.fillText(msg, x, y);
   }
-}
+};
 
-export const drawStartScreen = (ctx, props) => {
+export const drawStartScreen = (ctx /* props */) => {
   drawTextScreen(ctx, 'Press Enter to start!');
-}
+};
 
 export const drawTextScreen = (ctx, message, subtext) => {
   fillScreen(ctx, 'gray');
   ctx.fillStyle = 'black';
-  ctx.font = "24px 'Roboto Slab', sans-serif";
+  ctx.font = '24px \'Roboto Slab\', sans-serif';
   const textCenter = ctx.measureText(message).width / 2;
   const xCenter = (CELL_SIZE * GRID_WIDTH) / 2;
   ctx.fillText(message, xCenter - textCenter, (CELL_SIZE * GRID_HEIGHT) / 2);
   if (subtext) {
-    ctx.font = "12px 'Roboto Slab', sans-serif";
+    ctx.font = '12px \'Roboto Slab\', sans-serif';
     const textCenter = ctx.measureText(subtext).width / 2;
     const xCenter = (CELL_SIZE * GRID_WIDTH) / 2;
-    ctx.fillText(subtext, xCenter - textCenter, 36 + (CELL_SIZE * GRID_HEIGHT) / 2);
+    ctx.fillText(
+      subtext,
+      xCenter - textCenter,
+      36 + (CELL_SIZE * GRID_HEIGHT) / 2
+    );
   }
 };
 
@@ -108,8 +115,20 @@ export const drawGrid = ctx => {
 
 export const drawDash = (ctx, { level, score, linesCleared }) => {
   ctx.fillStyle = 'black';
-  ctx.font = "12px 'Helvetica Neue', sans-serif";
-  ctx.fillText(`Level: ${level}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE);
-  ctx.fillText(`Score: ${score}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 2);
-  ctx.fillText(`Cleared: ${linesCleared}`, CELL_SIZE, CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3);
-} 
+  ctx.font = '12px \'Helvetica Neue\', sans-serif';
+  ctx.fillText(
+    `Level: ${level}`,
+    CELL_SIZE,
+    CELL_SIZE * GRID_HEIGHT + CELL_SIZE
+  );
+  ctx.fillText(
+    `Score: ${score}`,
+    CELL_SIZE,
+    CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 2
+  );
+  ctx.fillText(
+    `Cleared: ${linesCleared}`,
+    CELL_SIZE,
+    CELL_SIZE * GRID_HEIGHT + CELL_SIZE * 3
+  );
+};

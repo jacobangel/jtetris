@@ -1,26 +1,17 @@
-import { drawStartScreen } from "./canvasUtils";
-import { drawLevelSelect, drawHighScores } from "./startScreenComponents";
+import { drawStartScreen } from './canvasUtils';
+import { drawLevelSelect, drawHighScores } from './startScreenComponents';
 import { LOG_LEVELS, Logger } from './logger';
 
 const moveMap = {
-  'ArrowLeft': 'left',
-  'ArrowRight': 'right',
-  'ArrowUp': 'up',
-  'ArrowDown': 'down',
-}
-
-const defaultScores = [
-  { name: 'AAA', score: 9999 },
-  { name: 'BBB', score: 8888 },
-  { name: 'CCC', score: 7777 },
-];
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+};
 
 export class StartScreen {
-  constructor({ onStartGame, startingLevel, 
-    totalLevels, onNewLevelChosen, scores }) {
-
+  constructor({ onStartGame, startingLevel, totalLevels, onNewLevelChosen }) {
     this.startGameCB = onStartGame;
-    this.scores = scores && scores.length ? scores : defaultScores;
     this.logger = new Logger(LOG_LEVELS.INFO);
     this.level = startingLevel || 1;
     this.totalLevels = totalLevels || 10;
@@ -33,9 +24,9 @@ export class StartScreen {
   }
 
   processTick(time) {
-    this.logger.debug(`Processing an animation tick`);
+    this.logger.debug('Processing an animation tick');
     if (this.lastTime === undefined) {
-      this.lastTime = time; 
+      this.lastTime = time;
     }
     if (time - this.lastTime > 250) {
       this.blink = !this.blink;
@@ -51,7 +42,7 @@ export class StartScreen {
     } else if (dir === 'left') {
       level--;
     } else if (dir === 'up') {
-      level -= 5; 
+      level -= 5;
     } else {
       level += 5;
     }
@@ -67,40 +58,45 @@ export class StartScreen {
     this.level = level;
     this.onNewLevelChosenCb({ level });
   }
- 
+
   handleInput(key) {
     this.logger.debug(`handle start input: '${key}'`);
     /**
      * @todo add input modes based on whether the game is started.
      */
     switch (key) {
-      case 'ArrowLeft':
-      case 'ArrowRight':
-      case 'ArrowUp':
-      case 'ArrowDown':
-        this.moveLevelSelect(moveMap[key]);
-        break;
-      case 'z':
-        break;
-      case 'x':
-        break;
-      case 'Escape':
-        break;
-      case 'Enter':
-        this.startGameCB({ level: this.level });
-        break;
-      default:
-        this.logger.info(`Unhandled input:`, key);
-        return false;
+    case 'ArrowLeft':
+    case 'ArrowRight':
+    case 'ArrowUp':
+    case 'ArrowDown':
+      this.moveLevelSelect(moveMap[key]);
+      break;
+    case 'z':
+      break;
+    case 'x':
+      break;
+    case 'Escape':
+      break;
+    case 'Enter':
+      this.startGameCB({ level: this.level });
+      break;
+    default:
+      this.logger.info('Unhandled input:', key);
+      return false;
     }
     return true;
   }
 
   drawScreen(ctx, props) {
+    const { scores } = props;
     drawStartScreen(ctx, { startingLevel: this.level });
-    drawLevelSelect(ctx, { levels: 9, currentLevel: this.level, blinking: this.blink })
+    drawLevelSelect(ctx, {
+      levels: 9,
+      currentLevel: this.level,
+      blinking: this.blink,
+    });
     drawHighScores(ctx, {
-      scores: this.scores,
+      scores,
     });
   }
 }
